@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ "*" ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  examples:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install matplotlib
+
+      - name: Install Python package
+        run: python setup.py install --user
+
+      - name: Run example.py
+        working-directory: Examples
+        run: python example.py dont_show
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -U urllib3 requests
+          python -m pip install twine
+
+      - name: Create build distribution
+        run: python setup.py bdist_wheel
+
+      - name: Create source distribution
+        run: python setup.py sdist
+
+      - name: Publish Python package
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.TOKEN }}
+        run: python -m twine upload --verbose --repository testpypi dist/*
