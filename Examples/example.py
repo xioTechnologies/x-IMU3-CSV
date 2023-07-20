@@ -91,7 +91,7 @@ print(type(device.rssi.percentage))
 print(type(device.rssi.power))
 
 print(type(device.serial_accessory.timestamp))
-print(type(device.serial_accessory.string))
+print(type(device.serial_accessory.csv))
 
 print(type(device.notification.timestamp))
 print(type(device.notification.string))

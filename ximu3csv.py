@@ -73,7 +73,7 @@ class __Message(ABC):
 
         self._numerical = numpy.genfromtxt(file_path, delimiter=",", skip_header=1)
 
-        if message_type in (MessageType.SERIAL_ACCESSORY, MessageType.NOTIFICATION, MessageType.ERROR):
+        if message_type in (MessageType.NOTIFICATION, MessageType.ERROR):
             self._string = numpy.genfromtxt(file_path, delimiter=",", skip_header=1, usecols=1, dtype=None, encoding=None)  # TODO: Handle strings that contain commas
 
     @property
@@ -303,8 +303,8 @@ class SerialAccessory(__Message):
         super().__init__(directory, message_types, MessageType.SERIAL_ACCESSORY)
 
     @property
-    def string(self):
-        return self._string
+    def csv(self):
+        return self._numerical[:, 1:]
 
 
 class Notification(__Message):

@@ -8,7 +8,7 @@ if len(sys.argv) == 1:  # if this script was called without arguments
 github_url = "https://github.com/xioTechnologies/ximu3csv"
 
 setup(name="ximu3csv",
-      version="0.0.0",
+      version="0.0.1",
       description="x-IMU3 CSV",
       long_description="See [github](" + github_url + ") for documentation and examples.",
       long_description_content_type='text/markdown',
