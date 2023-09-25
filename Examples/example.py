@@ -72,6 +72,12 @@ print(type(device.earth_acceleration.quaternion.x))
 print(type(device.earth_acceleration.quaternion.y))
 print(type(device.earth_acceleration.quaternion.z))
 
+print(type(device.ahrs_status.timestamp))
+print(type(device.ahrs_status.initialising))
+print(type(device.ahrs_status.angular_rate_recovery))
+print(type(device.ahrs_status.acceleration_rate_recovery))
+print(type(device.ahrs_status.magnetic_rate_recovery))
+
 print(type(device.high_g_accelerometer.timestamp))
 print(type(device.high_g_accelerometer.high_g_accelerometer.xyz))
 print(type(device.high_g_accelerometer.high_g_accelerometer.x))

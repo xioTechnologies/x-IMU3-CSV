@@ -14,6 +14,7 @@ class MessageType(Enum):
     EULER_ANGLES = auto()
     LINEAR_ACCELERATION = auto()
     EARTH_ACCELERATION = auto()
+    AHRS_STATUS = auto()
     HIGH_G_ACCELEROMETER = auto()
     TEMPERATURE = auto()
     BATTERY = auto()
@@ -39,6 +40,8 @@ class MessageType(Enum):
                 base_name = "LinearAcceleration"
             case MessageType.EARTH_ACCELERATION:
                 base_name = "EarthAcceleration"
+            case MessageType.AHRS_STATUS:
+                base_name = "AhrsStatus"
             case MessageType.HIGH_G_ACCELEROMETER:
                 base_name = "HighGAccelerometer"
             case MessageType.TEMPERATURE:
@@ -250,6 +253,27 @@ class EarthAcceleration(__Message):
         return Xyz(self._numerical, 5)
 
 
+class AhrsStatus(__Message):
+    def __init__(self, directory, message_types):
+        super().__init__(directory, message_types, MessageType.AHRS_STATUS)
+
+    @property
+    def initialising(self):
+        return self._numerical[:, 1]
+
+    @property
+    def angular_rate_recovery(self):
+        return self._numerical[:, 2]
+
+    @property
+    def acceleration_rate_recovery(self):
+        return self._numerical[:, 3]
+
+    @property
+    def magnetic_rate_recovery(self):
+        return self._numerical[:, 4]
+
+
 class HighGAccelerometer(__Message):
     def __init__(self, directory, message_types):
         super().__init__(directory, message_types, MessageType.HIGH_G_ACCELEROMETER)
@@ -353,6 +377,8 @@ class Device():
 
         self.__earth_acceleration = EarthAcceleration(directory, message_types)
 
+        self.__ahrs_status = AhrsStatus(directory, message_types)
+
         self.__high_g_accelerometer = HighGAccelerometer(directory, message_types)
 
         self.__temperature = Temperature(directory, message_types)
@@ -432,6 +458,10 @@ class Device():
     @property
     def earth_acceleration(self):
         return self.__earth_acceleration
+
+    @property
+    def ahrs_status(self):
+        return self.__ahrs_status
 
     @property
     def high_g_accelerometer(self):
