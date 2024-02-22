@@ -74,10 +74,13 @@ class __Message(ABC):
         if not os.path.isfile(file_path):
             return
 
-        self._numerical = numpy.genfromtxt(file_path, delimiter=",", skip_header=1)
+        try:
+            self._numerical = numpy.genfromtxt(file_path, delimiter=",", skip_header=1)
 
-        if message_type in (MessageType.NOTIFICATION, MessageType.ERROR):
-            self._string = numpy.genfromtxt(file_path, delimiter=",", skip_header=1, usecols=1, dtype=None, encoding=None)  # TODO: Handle strings that contain commas
+            if message_type in (MessageType.NOTIFICATION, MessageType.ERROR):
+                self._string = numpy.genfromtxt(file_path, delimiter=",", skip_header=1, usecols=1, dtype=None, encoding=None)  # TODO: Handle strings that contain commas
+        except:
+            print("Unable to read file " + file_path)
 
     @property
     def timestamp(self):
@@ -398,7 +401,10 @@ class Device():
         for command in commands:
             for key, value in command.items():
                 if key == "ping":
-                    return value["interface"], value["deviceName"],  value["serialNumber"]
+                    try:
+                        return value["interface"], value["deviceName"], value["serialNumber"]
+                    except:
+                        print("Unable to parse ping response " + str(value))
 
         return None, None, None
 
@@ -407,7 +413,10 @@ class Device():
         for command in commands:
             for key, value in command.items():
                 if key == "time":
-                    return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+                    try:
+                        return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+                    except:
+                        print("Unable to parse time " + str(value))
 
         return None
 
