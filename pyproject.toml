@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ximu3csv"
+version = "0.1.3"
+description = "x-IMU3 CSV"
+readme = {text = "See [github](https://github.com/xioTechnologies/ximu3csv) for documentation and examples.", content-type = "text/markdown" }
+authors = [{name = "x-io Technologies Limited", email = "info@x-io.co.uk"}]
+license = {file = "LICENSE.md"}
+
+[project.urls]
+Repository = "https://github.com/xioTechnologies/ximu3csv"
+
+[tool.setuptools]
+py-modules = ["ximu3csv"]
