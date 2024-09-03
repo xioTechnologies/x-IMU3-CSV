@@ -402,7 +402,7 @@ class Device:
             for key, value in command.items():
                 if key == "ping":
                     try:
-                        return value["interface"], value["deviceName"], value["serialNumber"]
+                        return value["interface"], value["name"], value["sn"]
                     except Exception as _:
                         print(f"Unable to parse ping response {value}")
 
