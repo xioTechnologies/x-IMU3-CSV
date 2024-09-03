@@ -1,5 +1,5 @@
 import json
-import numpy
+import numpy as np
 import os
 from abc import ABC, abstractmethod
 from datetime import datetime
@@ -57,14 +57,14 @@ class MessageType(Enum):
             case MessageType.ERROR:
                 base_name = "Error"
 
-        return base_name + ".csv"
+        return f"{base_name}.csv"
 
 
 class __Message(ABC):
     @abstractmethod
     def __init__(self, directory, message_types, message_type):
-        self._numerical = numpy.empty([0, 10])  # 10 is the maximum number of columns expected of any message type
-        self._string = numpy.empty([0, 1])
+        self._numerical = np.empty([0, 10])  # 10 is the maximum number of columns expected of any message type
+        self._string = np.empty([0, 1])
 
         if message_type not in message_types:
             return
@@ -75,21 +75,21 @@ class __Message(ABC):
             return
 
         try:
-            self._numerical = numpy.genfromtxt(file_path, delimiter=",", skip_header=1)
+            self._numerical = np.genfromtxt(file_path, delimiter=",", skip_header=1)
 
             if message_type in (MessageType.NOTIFICATION, MessageType.ERROR):
-                self._string = numpy.genfromtxt(file_path, delimiter=",", skip_header=1, usecols=1, dtype=None, encoding=None)  # TODO: Handle strings that contain commas
-        except:
-            print("Unable to read file " + file_path)
+                self._string = np.genfromtxt(file_path, delimiter=",", skip_header=1, usecols=1, dtype=None, encoding=None)  # TODO: Handle strings that contain commas
+        except Exception as _:
+            print(f"Unable to read file {file_path}")
 
     @property
     def timestamp(self):
         return self._numerical[:, 0]
 
 
-class Xyz():
+class Xyz:
     def __init__(self, data, column):
-        self._numerical = data[:, column:(column + 3)]
+        self._numerical = data[:, column : (column + 3)]
 
     @property
     def xyz(self):
@@ -108,9 +108,9 @@ class Xyz():
         return self._numerical[:, 2]
 
 
-class Wxyz():
+class Wxyz:
     def __init__(self, data, column):
-        self._numerical = data[:, column:(column + 4)]
+        self._numerical = data[:, column : (column + 4)]
 
     @property
     def wxyz(self):
@@ -352,7 +352,7 @@ class Error(__Message):
         return self._string
 
 
-class Device():
+class Device:
     def __init__(self, directory, message_types):
         file_path = os.path.join(directory, "Command.json")
 
@@ -403,8 +403,8 @@ class Device():
                 if key == "ping":
                     try:
                         return value["interface"], value["deviceName"], value["serialNumber"]
-                    except:
-                        print("Unable to parse ping response " + str(value))
+                    except Exception as _:
+                        print(f"Unable to parse ping response {value}")
 
         return None, None, None
 
@@ -415,8 +415,8 @@ class Device():
                 if key == "time":
                     try:
                         return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
-                    except:
-                        print("Unable to parse time " + str(value))
+                    except Exception as _:
+                        print(f"Unable to parse time {value}")
 
         return None
 
@@ -503,11 +503,11 @@ class Device():
 
 def read(root, message_types=MessageType):
     if not os.path.isdir(root):
-        raise Exception("\"" + root + "\" does not exist")
+        raise Exception(f'"{root}" does not exist')
 
-    directories = [os.path.join(root, d) for d in os.listdir(root) if not d.startswith('.')]
+    directories = [os.path.join(root, d) for d in os.listdir(root) if not d.startswith(".")]
 
     if not directories:
-        raise Exception("\"" + root + "\" is empty")
+        raise Exception(f'"{root}" is empty')
 
     return [Device(d, message_types) for d in directories]
