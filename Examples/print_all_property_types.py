@@ -1,12 +1,15 @@
 import ximu3csv
 
-device = ximu3csv.read("Logged Data")[0]
+devices = ximu3csv.read("Logged Data")
+
+device = devices[0]
 
 print(type(device.command))
 
 print(type(device.interface))
 print(type(device.serial_number))
 print(type(device.device_name))
+
 print(type(device.time))
 
 print(type(device.inertial.timestamp))
