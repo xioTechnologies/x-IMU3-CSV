@@ -7,6 +7,7 @@ print(type(device.command))
 print(type(device.interface))
 print(type(device.serial_number))
 print(type(device.device_name))
+
 print(type(device.time))
 
 print(type(device.inertial.timestamp))
