@@ -1,0 +1,23 @@
+[
+    {"ping":{"interface":"UDP","name":"x-IMU3","sn":"673B204B"}},
+    {"time":"2000-01-23 04:59:47"},
+    {"initialise":null},
+    {"ahrs_message_type":0},
+    {"apply":null},
+    {"note":null},
+    {"ahrs_message_type":1},
+    {"apply":null},
+    {"note":null},
+    {"ahrs_message_type":2},
+    {"apply":null},
+    {"note":null},
+    {"ahrs_message_type":3},
+    {"apply":null},
+    {"note":null},
+    {"ahrs_message_type":3},
+    {"apply":null},
+    {"note":null},
+    {"ahrs_message_type":4},
+    {"apply":null},
+    {"note":null}
+]
