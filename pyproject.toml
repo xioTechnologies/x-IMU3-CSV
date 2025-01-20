@@ -4,14 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ximu3csv"
-version = "0.2.0"
+version = "0.3.0"
 description = "x-IMU3 CSV"
-readme = {text = "See [github](https://github.com/xioTechnologies/ximu3csv) for documentation and examples.", content-type = "text/markdown" }
-authors = [{name = "x-io Technologies Limited", email = "info@x-io.co.uk"}]
-license = {file = "LICENSE.md"}
+readme = { text = "See [github](https://github.com/xioTechnologies/x-IMU3-CSV) for documentation and examples.", content-type = "text/markdown" }
+authors = [{ name = "x-io Technologies Limited", email = "info@x-io.co.uk" }]
+license = { file = "LICENSE.md" }
 
 [project.urls]
-Repository = "https://github.com/xioTechnologies/ximu3csv"
+Repository = "https://github.com/xioTechnologies/x-IMU3-CSV"
 
 [tool.setuptools]
-py-modules = ["ximu3csv"]
+packages = ["ximu3csv"]
