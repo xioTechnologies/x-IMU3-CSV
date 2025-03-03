@@ -60,7 +60,7 @@ def __parse_time(command: List[Dict[str, Any]]) -> Optional[datetime]:
     return None
 
 
-def __read_csv(directory: str, message_type: DataMessageType, filter: List[DataMessageType]) -> np.ndarray:
+def __read_csv(directory: str, message_type: DataMessageType, filter: Tuple[DataMessageType, ...]) -> np.ndarray:
     csv = np.empty([0, 10])  # 10 is the maximum number of columns expected for any data message
     string = np.empty([0, 1])
 
@@ -83,7 +83,7 @@ def __read_csv(directory: str, message_type: DataMessageType, filter: List[DataM
     return csv, string
 
 
-def __read_device(directory: str, filter: List[DataMessageType]) -> Device:
+def __read_device(directory: str, filter: Tuple[DataMessageType, ...]) -> Device:
     command = __read_command(directory)
 
     interface, device_name, serial_number = __parse_ping(command)
@@ -114,16 +114,16 @@ def __read_device(directory: str, filter: List[DataMessageType]) -> Device:
     )
 
 
-def read(root: str, filter: List[DataMessageType] = None) -> List[Device]:
+def read(root: str, filter: Optional[Tuple[DataMessageType, ...]] = None) -> List[Device]:
     if not os.path.isdir(root):
-        raise Exception(f'"{root}" does not exist')
+        raise ValueError(f'"{root}" does not exist')
 
     if filter is None:
-        filter = list(DataMessageType)
+        filter = tuple(DataMessageType)
 
     device_directories = [os.path.join(root, d) for d in os.listdir(root) if not d.startswith(".")]
 
     if not device_directories:
-        raise Exception(f'"{root}" is empty')
+        raise ValueError(f'"{root}" is empty')
 
     return [__read_device(d, filter) for d in device_directories]

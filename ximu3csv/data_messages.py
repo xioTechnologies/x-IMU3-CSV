@@ -1,7 +1,6 @@
 from abc import ABC
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import List
 
 import numpy as np
 
@@ -63,7 +62,7 @@ class DataMessageType(Enum):
 @dataclass(frozen=True)
 class __DataMessage(ABC):
     _csv: np.ndarray
-    _string: str
+    _string: np.ndarray
 
     @property
     def timestamp(self) -> np.ndarray:
@@ -296,12 +295,12 @@ class SerialAccessory(__DataMessage):
 @dataclass(frozen=True)
 class Notification(__DataMessage):
     @property
-    def string(self) -> List[str]:
+    def string(self) -> np.ndarray:
         return self._string
 
 
 @dataclass(frozen=True)
 class Error(__DataMessage):
     @property
-    def string(self) -> List[str]:
+    def string(self) -> np.ndarray:
         return self._string
