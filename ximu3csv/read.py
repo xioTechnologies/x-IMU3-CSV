@@ -1,7 +1,7 @@
 import json
 import os
 from datetime import datetime
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -36,7 +36,7 @@ def __read_command(directory: str) -> List[Dict[str, Any]]:
         return json.load(file)
 
 
-def __parse_ping(command: List[Dict[str, Any]]) -> Union[Tuple[None, None, None], Tuple[str, str, str]]:
+def __parse_ping(command: List[Dict[str, Any]]) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     for response in command:
         for key, value in response.items():
             if key == "ping":
@@ -48,7 +48,7 @@ def __parse_ping(command: List[Dict[str, Any]]) -> Union[Tuple[None, None, None]
     return None, None, None
 
 
-def __parse_time(command: List[Dict[str, Any]]) -> datetime:
+def __parse_time(command: List[Dict[str, Any]]) -> Optional[datetime]:
     for response in command:
         for key, value in response.items():
             if key == "time":

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional
 
 from .data_messages import (
     AhrsStatus,
@@ -27,12 +27,12 @@ class Device:
     command: List[Dict[str, Any]]
 
     # "ping" from Command.json
-    interface: Union[None, str]
-    device_name: Union[None, str]
-    serial_number: Union[None, str]
+    interface: Optional[str]
+    device_name: Optional[str]
+    serial_number: Optional[str]
 
     # "time" from Command.json
-    time: Union[None, datetime]
+    time: Optional[datetime]
 
     # *.csv files
     inertial: Inertial
