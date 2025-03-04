@@ -2,7 +2,7 @@ from dataclasses import replace
 from typing import List
 
 from .data_messages import DataMessage
-from .device import Device
+from .device import Device, update_first_and_last_timestamps
 
 
 def __crop(message: DataMessage, start: int, stop: int) -> DataMessage:
@@ -28,7 +28,7 @@ def crop(devices: List[Device], start: int = 0, stop: int = 2**64 - 1) -> List[D
     if stop < min(first_timestamps):
         raise ValueError(f"Stop {stop} is before first timestamp {min(first_timestamps)}")
 
-    return [
+    devices = [
         replace(
             d,
             inertial=__crop(d.inertial, start, stop),
@@ -49,3 +49,5 @@ def crop(devices: List[Device], start: int = 0, stop: int = 2**64 - 1) -> List[D
         )
         for d in devices
     ]
+
+    return [update_first_and_last_timestamps(d) for d in devices]

@@ -1,10 +1,11 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, fields, replace
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from .data_messages import (
     AhrsStatus,
     Battery,
+    DataMessage,
     EarthAcceleration,
     Error,
     EulerAngles,
@@ -54,3 +55,25 @@ class Device:
     # first and last timestamps from *.csv files
     first_timestamp: Optional[int]
     last_timestamp: Optional[int]
+
+
+def update_first_and_last_timestamps(device: Device) -> Device:
+    device = replace(device, first_timestamp=None)
+    device = replace(device, last_timestamp=None)
+
+    for field in fields(device):
+        attribute = getattr(device, field.name)
+
+        if not isinstance(attribute, DataMessage):
+            continue
+
+        if len(attribute.timestamp) == 0:
+            continue
+
+        if device.first_timestamp is None or attribute.timestamp[0] < device.first_timestamp:
+            device = replace(device, first_timestamp=attribute.timestamp[0])
+
+        if device.last_timestamp is None or attribute.timestamp[-1] > device.last_timestamp:
+            device = replace(device, last_timestamp=attribute.timestamp[-1])
+
+    return device

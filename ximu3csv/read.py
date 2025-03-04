@@ -1,6 +1,5 @@
 import json
 import os
-from dataclasses import fields, replace
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -9,7 +8,6 @@ import numpy as np
 from .data_messages import (
     AhrsStatus,
     Battery,
-    DataMessage,
     DataMessageType,
     EarthAcceleration,
     Error,
@@ -25,7 +23,7 @@ from .data_messages import (
     SerialAccessory,
     Temperature,
 )
-from .device import Device
+from .device import Device, update_first_and_last_timestamps
 
 
 def __read_command(directory: str) -> List[Dict[str, Any]]:
@@ -117,17 +115,7 @@ def __read_device(directory: str, filter: Tuple[DataMessageType, ...]) -> Device
         None,
     )
 
-    for field in fields(device):
-        attribute = getattr(device, field.name)
-
-        if isinstance(attribute, DataMessage) and len(attribute.timestamp) > 0:
-            if device.first_timestamp is None or attribute.timestamp[0] < device.first_timestamp:
-                device = replace(device, first_timestamp=attribute.timestamp[0])
-
-            if device.last_timestamp is None or attribute.timestamp[-1] > device.last_timestamp:
-                device = replace(device, last_timestamp=attribute.timestamp[-1])
-
-    return device
+    return update_first_and_last_timestamps(device)
 
 
 def read(root: str, filter: Optional[Tuple[DataMessageType, ...]] = None) -> List[Device]:

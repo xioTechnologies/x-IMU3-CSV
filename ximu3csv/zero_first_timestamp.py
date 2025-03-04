@@ -4,7 +4,7 @@ from typing import List
 import numpy as np
 
 from .data_messages import DataMessage
-from .device import Device
+from .device import Device, update_first_and_last_timestamps
 
 
 def __zero_first_timestamp(message: DataMessage, first_timestamp: int) -> DataMessage:
@@ -30,7 +30,7 @@ def zero_first_timestamp(devices: List[Device], offset: int = 0) -> List[Device]
 
     first_timestamp = min(first_timestamps) - offset
 
-    return [
+    devices = [
         replace(
             d,
             inertial=__zero_first_timestamp(d.inertial, first_timestamp),
@@ -48,8 +48,8 @@ def zero_first_timestamp(devices: List[Device], offset: int = 0) -> List[Device]
             serial_accessory=__zero_first_timestamp(d.serial_accessory, first_timestamp),
             notification=__zero_first_timestamp(d.notification, first_timestamp),
             error=__zero_first_timestamp(d.error, first_timestamp),
-            first_timestamp=d.first_timestamp - first_timestamp if d.first_timestamp is not None else d.first_timestamp,
-            last_timestamp=d.last_timestamp - first_timestamp if d.last_timestamp is not None else d.last_timestamp,
         )
         for d in devices
     ]
+
+    return [update_first_and_last_timestamps(d) for d in devices]

@@ -12,7 +12,7 @@ from .data_messages import (
     Quaternion,
     RotationMatrix,
 )
-from .device import Device
+from .device import Device, update_first_and_last_timestamps
 
 
 def __extrapolate(time: np.ndarray, values: np.ndarray, new_time: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -109,7 +109,7 @@ def resample(devices: List[Device], sample_rate: float) -> List[Device]:
 
     timestamp = np.arange(first_timestamp, last_timestamp, 1e6 / sample_rate)
 
-    return [
+    devices = [
         replace(
             d,
             inertial=__resample(d.inertial, timestamp),
@@ -127,3 +127,5 @@ def resample(devices: List[Device], sample_rate: float) -> List[Device]:
         )
         for d in devices
     ]
+
+    return [update_first_and_last_timestamps(d) for d in devices]
