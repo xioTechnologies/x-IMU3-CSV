@@ -50,3 +50,7 @@ class Device:
     serial_accessory: SerialAccessory
     notification: Notification
     error: Error
+
+    # first and last timestamps from *.csv files
+    first_timestamp: Optional[int]
+    last_timestamp: Optional[int]

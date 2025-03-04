@@ -104,3 +104,6 @@ print(type(device.notification.string))
 
 print(type(device.error.timestamp))
 print(type(device.error.string))
+
+print(type(device.first_timestamp))
+print(type(device.last_timestamp))

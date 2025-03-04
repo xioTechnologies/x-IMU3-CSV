@@ -60,7 +60,7 @@ class DataMessageType(Enum):
 
 
 @dataclass(frozen=True)
-class __DataMessage(ABC):
+class DataMessage(ABC):
     _csv: np.ndarray
     _string: np.ndarray
 
@@ -118,7 +118,7 @@ class Wxyz:
 
 
 @dataclass(frozen=True)
-class Inertial(__DataMessage):
+class Inertial(DataMessage):
     @property
     def gyroscope(self) -> Xyz:
         return Xyz(self._csv, 1)
@@ -129,21 +129,21 @@ class Inertial(__DataMessage):
 
 
 @dataclass(frozen=True)
-class Magnetometer(__DataMessage):
+class Magnetometer(DataMessage):
     @property
     def magnetometer(self) -> Xyz:
         return Xyz(self._csv, 1)
 
 
 @dataclass(frozen=True)
-class Quaternion(__DataMessage):
+class Quaternion(DataMessage):
     @property
     def quaternion(self) -> Wxyz:
         return Wxyz(self._csv, 1)
 
 
 @dataclass(frozen=True)
-class RotationMatrix(__DataMessage):
+class RotationMatrix(DataMessage):
     @property
     def rotation_matrix(self) -> np.ndarray:
         return self._csv[:, 1:10]
@@ -186,7 +186,7 @@ class RotationMatrix(__DataMessage):
 
 
 @dataclass(frozen=True)
-class EulerAngles(__DataMessage):
+class EulerAngles(DataMessage):
     @property
     def euler_angles(self) -> np.ndarray:
         return self._csv[:, 1:4]
@@ -205,7 +205,7 @@ class EulerAngles(__DataMessage):
 
 
 @dataclass(frozen=True)
-class LinearAcceleration(__DataMessage):
+class LinearAcceleration(DataMessage):
     @property
     def quaternion(self) -> Wxyz:
         return Wxyz(self._csv, 1)
@@ -216,7 +216,7 @@ class LinearAcceleration(__DataMessage):
 
 
 @dataclass(frozen=True)
-class EarthAcceleration(__DataMessage):
+class EarthAcceleration(DataMessage):
     @property
     def quaternion(self) -> Wxyz:
         return Wxyz(self._csv, 1)
@@ -227,7 +227,7 @@ class EarthAcceleration(__DataMessage):
 
 
 @dataclass(frozen=True)
-class AhrsStatus(__DataMessage):
+class AhrsStatus(DataMessage):
     @property
     def initialising(self) -> np.ndarray:
         return self._csv[:, 1]
@@ -246,21 +246,21 @@ class AhrsStatus(__DataMessage):
 
 
 @dataclass(frozen=True)
-class HighGAccelerometer(__DataMessage):
+class HighGAccelerometer(DataMessage):
     @property
     def high_g_accelerometer(self) -> Xyz:
         return Xyz(self._csv, 1)
 
 
 @dataclass(frozen=True)
-class Temperature(__DataMessage):
+class Temperature(DataMessage):
     @property
     def temperature(self) -> np.ndarray:
         return self._csv[:, 1]
 
 
 @dataclass(frozen=True)
-class Battery(__DataMessage):
+class Battery(DataMessage):
     @property
     def percentage(self) -> np.ndarray:
         return self._csv[:, 1]
@@ -275,7 +275,7 @@ class Battery(__DataMessage):
 
 
 @dataclass(frozen=True)
-class Rssi(__DataMessage):
+class Rssi(DataMessage):
     @property
     def percentage(self) -> np.ndarray:
         return self._csv[:, 1]
@@ -286,21 +286,21 @@ class Rssi(__DataMessage):
 
 
 @dataclass(frozen=True)
-class SerialAccessory(__DataMessage):
+class SerialAccessory(DataMessage):
     @property
     def csv(self) -> np.ndarray:
         return self._csv[:, 1:]
 
 
 @dataclass(frozen=True)
-class Notification(__DataMessage):
+class Notification(DataMessage):
     @property
     def string(self) -> np.ndarray:
         return self._string
 
 
 @dataclass(frozen=True)
-class Error(__DataMessage):
+class Error(DataMessage):
     @property
     def string(self) -> np.ndarray:
         return self._string
