@@ -1,7 +1,7 @@
 import json
 import os
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -118,12 +118,12 @@ def __read_device(directory: str, filter: Tuple[DataMessageType, ...]) -> Device
     return update_first_and_last_timestamps(device)
 
 
-def read(root: str, filter: Optional[Tuple[DataMessageType, ...]] = None) -> List[Device]:
+def read(root: str, filter: Union[DataMessageType, Tuple[DataMessageType, ...]] = tuple(DataMessageType)) -> List[Device]:
     if not os.path.isdir(root):
         raise ValueError(f'"{root}" does not exist')
 
-    if filter is None:
-        filter = tuple(DataMessageType)
+    if isinstance(filter, DataMessageType):
+        filter = (filter,)
 
     device_directories = [os.path.join(root, d) for d in os.listdir(root) if not d.startswith(".")]
 
