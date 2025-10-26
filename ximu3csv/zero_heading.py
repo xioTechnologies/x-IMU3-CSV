@@ -1,5 +1,4 @@
 from dataclasses import replace
-from typing import List
 
 import numpy as np
 import scipy
@@ -15,7 +14,7 @@ from .data_messages import (
 from .device import Device
 
 
-def __zero_heading_rotations(rotations: List[scipy.spatial.transform.Rotation], index: int, offset: float) -> List[scipy.spatial.transform.Rotation]:
+def __zero_heading_rotations(rotations: list[scipy.spatial.transform.Rotation], index: int, offset: float) -> list[scipy.spatial.transform.Rotation]:
     angle = offset - rotations[index].as_euler("ZYX", degrees=True)[0]
 
     rotations[index:] = scipy.spatial.transform.Rotation.from_euler("Z", angle, degrees=True) * rotations[index:]
@@ -64,7 +63,7 @@ def __zero_heading_message(message: DataMessage, timestamp: int, offset: float) 
     return replace(message, _csv=csv)
 
 
-def zero_heading(devices: List[Device], timestamp: int = 0, offset: float = 0) -> List[Device]:
+def zero_heading(devices: list[Device], timestamp: int = 0, offset: float = 0) -> list[Device]:
     return [
         replace(
             d,

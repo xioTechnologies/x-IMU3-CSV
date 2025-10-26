@@ -1,5 +1,4 @@
 from dataclasses import replace
-from typing import List
 
 import numpy as np
 import scipy
@@ -39,5 +38,5 @@ def __convert_to_euler_angles(device: Device) -> EulerAngles:
     )
 
 
-def convert_to_euler_angles(devices: List[Device]) -> List[Device]:
+def convert_to_euler_angles(devices: list[Device]) -> list[Device]:
     return [replace(d, euler_angles=__convert_to_euler_angles(d)) for d in devices]

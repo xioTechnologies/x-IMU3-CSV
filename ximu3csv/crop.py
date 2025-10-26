@@ -1,5 +1,4 @@
 from dataclasses import replace
-from typing import List
 
 from .data_messages import DataMessage
 from .device import Device, update_first_and_last_timestamps
@@ -15,7 +14,7 @@ def __crop(message: DataMessage, start: int, stop: int) -> DataMessage:
     )
 
 
-def crop(devices: List[Device], start: int = 0, stop: int = 2**64 - 1) -> List[Device]:
+def crop(devices: list[Device], start: int = 0, stop: int = 2**64 - 1) -> list[Device]:
     first_timestamps = [d.first_timestamp for d in devices if d.first_timestamp is not None]
     last_timestamps = [d.last_timestamp for d in devices if d.last_timestamp is not None]
 

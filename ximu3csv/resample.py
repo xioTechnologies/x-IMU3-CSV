@@ -1,5 +1,4 @@
 from dataclasses import replace
-from typing import List, Tuple
 
 import numpy as np
 import scipy
@@ -15,7 +14,7 @@ from .data_messages import (
 from .device import Device, update_first_and_last_timestamps
 
 
-def __extrapolate(time: np.ndarray, values: np.ndarray, new_time: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def __extrapolate(time: np.ndarray, values: np.ndarray, new_time: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     if new_time[0] < time[0]:
         time = np.concatenate(([new_time[0]], time))
         values = np.concatenate(([values[0, :]], values))
@@ -94,7 +93,7 @@ def __resample(message: DataMessage, timestamp: np.ndarray) -> DataMessage:
     return replace(message, _csv=csv)
 
 
-def resample(devices: List[Device], sample_rate: float) -> List[Device]:
+def resample(devices: list[Device], sample_rate: float) -> list[Device]:
     first_timestamps = [d.first_timestamp for d in devices if d.first_timestamp is not None]
     last_timestamps = [d.last_timestamp for d in devices if d.last_timestamp is not None]
 
