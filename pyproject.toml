@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ximu3csv"
-version = "1.0.3"
+version = "1.0.4"
 description = "x-IMU3 CSV"
 readme = { text = "See [github](https://github.com/xioTechnologies/x-IMU3-CSV) for documentation and examples.", content-type = "text/markdown" }
 authors = [{ name = "x-io Technologies Limited", email = "info@x-io.co.uk" }]
