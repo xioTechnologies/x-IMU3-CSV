@@ -1,6 +1,6 @@
 from dataclasses import dataclass, fields, replace
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .data_messages import (
     AhrsStatus,
@@ -25,15 +25,15 @@ from .data_messages import (
 @dataclass(frozen=True)
 class Device:
     # Command.json
-    command: List[Dict[str, Any]]
+    command: list[dict[str, Any]]
 
     # "ping" from Command.json
-    interface: Optional[str]
-    device_name: Optional[str]
-    serial_number: Optional[str]
+    interface: str | None
+    device_name: str | None
+    serial_number: str | None
 
     # "time" from Command.json
-    time: Optional[datetime]
+    time: datetime | None
 
     # *.csv files
     inertial: Inertial
@@ -53,8 +53,8 @@ class Device:
     error: Error
 
     # first and last timestamps from *.csv files
-    first_timestamp: Optional[int]
-    last_timestamp: Optional[int]
+    first_timestamp: int | None
+    last_timestamp: int | None
 
 
 def update_first_and_last_timestamps(device: Device) -> Device:

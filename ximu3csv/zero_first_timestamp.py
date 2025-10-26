@@ -1,5 +1,4 @@
 from dataclasses import replace
-from typing import List
 
 import numpy as np
 
@@ -22,7 +21,7 @@ def __zero_first_timestamp(message: DataMessage, first_timestamp: int) -> DataMe
     )
 
 
-def zero_first_timestamp(devices: List[Device], offset: int = 0) -> List[Device]:
+def zero_first_timestamp(devices: list[Device], offset: int = 0) -> list[Device]:
     first_timestamps = [d.first_timestamp for d in devices if d.first_timestamp is not None]
 
     if not first_timestamps:
