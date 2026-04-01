@@ -1,6 +1,6 @@
 import json
-import os
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -26,13 +26,13 @@ from .data_messages import (
 from .device import Device, update_first_and_last_timestamps
 
 
-def __read_command(directory: str) -> list[dict[str, Any]]:
-    file_path = os.path.join(directory, "Command.json")
+def __read_command(directory: Path) -> list[dict[str, Any]]:
+    file_path = directory / "Command.json"
 
-    if not os.path.isfile(file_path):
+    if not file_path.is_file():
         return []
 
-    with open(file_path) as file:
+    with file_path.open() as file:
         return json.load(file)
 
 
@@ -60,16 +60,16 @@ def __parse_time(command: list[dict[str, Any]]) -> datetime | None:
     return None
 
 
-def __read_csv(directory: str, message_type: DataMessageType, filter: tuple[DataMessageType, ...]) -> np.ndarray:
+def __read_csv(directory: Path, message_type: DataMessageType, filter: tuple[DataMessageType, ...]) -> np.ndarray:
     csv = np.empty([0, 10])  # 10 is the maximum number of columns expected for any data message
     string = np.empty([0, 1])
 
     if message_type not in filter:
         return csv, string
 
-    file_path = os.path.join(directory, message_type.file_name)
+    file_path = directory / message_type.file_name
 
-    if not os.path.isfile(file_path):
+    if not file_path.is_file():
         return csv, string
 
     try:
@@ -83,7 +83,7 @@ def __read_csv(directory: str, message_type: DataMessageType, filter: tuple[Data
     return csv, string
 
 
-def __read_device(directory: str, filter: tuple[DataMessageType, ...]) -> Device:
+def __read_device(directory: Path, filter: tuple[DataMessageType, ...]) -> Device:
     command = __read_command(directory)
 
     interface, device_name, serial_number = __parse_ping(command)
@@ -118,16 +118,24 @@ def __read_device(directory: str, filter: tuple[DataMessageType, ...]) -> Device
     return update_first_and_last_timestamps(device)
 
 
-def read(root: str, filter: DataMessageType | tuple[DataMessageType, ...] = tuple(DataMessageType)) -> list[Device]:
-    if not os.path.isdir(root):
-        raise ValueError(f'"{root}" does not exist')
+def read(path: Path, filter: DataMessageType | tuple[DataMessageType, ...] = tuple(DataMessageType)) -> list[Device]:
+    path = Path(path)
+
+    if not path.is_absolute():
+        path = Path(__import__("__main__").__file__).parent / path
+
+    if not path.exists():
+        raise ValueError(f'"{path}" does not exist')
+
+    if not path.is_dir():
+        raise ValueError(f'"{path}" is not a directory')
 
     if isinstance(filter, DataMessageType):
         filter = (filter,)
 
-    device_directories = [os.path.join(root, d) for d in os.listdir(root) if not d.startswith(".")]
+    device_directories = [d for d in path.iterdir() if d.is_dir() and not d.name.startswith(".")]
 
     if not device_directories:
-        raise ValueError(f'"{root}" is empty')
+        raise ValueError(f'"{path}" is empty')
 
     return [__read_device(d, filter) for d in device_directories]
