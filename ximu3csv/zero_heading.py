@@ -14,7 +14,7 @@ from .data_messages import (
 from .device import Device
 
 
-def _zero_heading_rotations(rotations: list[scipy.spatial.transform.Rotation], index: int, offset: float) -> list[scipy.spatial.transform.Rotation]:
+def _zero_heading_rotations(rotations: scipy.spatial.transform.Rotation, index: int, offset: float) -> scipy.spatial.transform.Rotation:
     angle = offset - rotations[index].as_euler("ZYX", degrees=True)[0]
 
     rotations[index:] = scipy.spatial.transform.Rotation.from_euler("Z", angle, degrees=True) * rotations[index:]

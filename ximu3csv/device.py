@@ -71,9 +71,9 @@ def update_first_and_last_timestamps(device: Device) -> Device:
             continue
 
         if device.first_timestamp is None or attribute.timestamp[0] < device.first_timestamp:
-            device = replace(device, first_timestamp=attribute.timestamp[0])
+            device = replace(device, first_timestamp=int(attribute.timestamp[0]))
 
         if device.last_timestamp is None or attribute.timestamp[-1] > device.last_timestamp:
-            device = replace(device, last_timestamp=attribute.timestamp[-1])
+            device = replace(device, last_timestamp=int(attribute.timestamp[-1]))
 
     return device

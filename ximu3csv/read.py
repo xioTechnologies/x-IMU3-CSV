@@ -60,7 +60,7 @@ def _parse_time(command: list[dict[str, Any]]) -> datetime | None:
     return None
 
 
-def _read_csv(directory: Path, message_type: DataMessageType, filter: tuple[DataMessageType, ...]) -> np.ndarray:
+def _read_csv(directory: Path, message_type: DataMessageType, filter: tuple[DataMessageType, ...]) -> tuple[np.ndarray, np.ndarray]:
     csv = np.empty([0, 10])  # 10 is the maximum number of columns expected for any data message
     string = np.empty([0, 1])
 
@@ -76,7 +76,7 @@ def _read_csv(directory: Path, message_type: DataMessageType, filter: tuple[Data
         csv = np.genfromtxt(file_path, delimiter=",", skip_header=1, ndmin=2)
 
         if message_type in (DataMessageType.NOTIFICATION, DataMessageType.ERROR):
-            string = np.genfromtxt(file_path, delimiter=",", skip_header=1, usecols=1, dtype=None, encoding=None)  # TODO: support strings containing commas
+            string = np.genfromtxt(file_path, delimiter=",", skip_header=1, usecols=(1,), dtype=None, encoding="utf-8")  # TODO: support strings containing commas
     except Exception:
         print(f"Unable to read file: {file_path}")
 
