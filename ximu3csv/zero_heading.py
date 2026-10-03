@@ -14,7 +14,7 @@ from .data_messages import (
 from .device import Device
 
 
-def __zero_heading_rotations(rotations: list[scipy.spatial.transform.Rotation], index: int, offset: float) -> list[scipy.spatial.transform.Rotation]:
+def _zero_heading_rotations(rotations: list[scipy.spatial.transform.Rotation], index: int, offset: float) -> list[scipy.spatial.transform.Rotation]:
     angle = offset - rotations[index].as_euler("ZYX", degrees=True)[0]
 
     rotations[index:] = scipy.spatial.transform.Rotation.from_euler("Z", angle, degrees=True) * rotations[index:]
@@ -22,7 +22,7 @@ def __zero_heading_rotations(rotations: list[scipy.spatial.transform.Rotation], 
     return rotations
 
 
-def __zero_heading_message(message: DataMessage, timestamp: int, offset: float) -> DataMessage:
+def _zero_heading_message(message: DataMessage, timestamp: int, offset: float) -> DataMessage:
     if len(message.timestamp) == 0:
         return message
 
@@ -37,7 +37,7 @@ def __zero_heading_message(message: DataMessage, timestamp: int, offset: float) 
         csv = np.column_stack(
             (
                 message.timestamp,
-                __zero_heading_rotations(rotations, index, offset).as_quat()[:, [3, 0, 1, 2]],
+                _zero_heading_rotations(rotations, index, offset).as_quat()[:, [3, 0, 1, 2]],
                 message._csv[:, 5:],
             )
         )
@@ -47,7 +47,7 @@ def __zero_heading_message(message: DataMessage, timestamp: int, offset: float) 
         csv = np.column_stack(
             (
                 message.timestamp,
-                __zero_heading_rotations(rotations, index, offset).as_euler("ZYX", degrees=True)[:, [2, 1, 0]],
+                _zero_heading_rotations(rotations, index, offset).as_euler("ZYX", degrees=True)[:, [2, 1, 0]],
             )
         )
     elif isinstance(message, RotationMatrix):
@@ -56,7 +56,7 @@ def __zero_heading_message(message: DataMessage, timestamp: int, offset: float) 
         csv = np.column_stack(
             (
                 message.timestamp,
-                __zero_heading_rotations(rotations, index, offset).as_matrix().reshape(-1, 9),
+                _zero_heading_rotations(rotations, index, offset).as_matrix().reshape(-1, 9),
             )
         )
 
@@ -67,11 +67,11 @@ def zero_heading(devices: list[Device], timestamp: int = 0, offset: float = 0) -
     return [
         replace(
             d,
-            quaternion=__zero_heading_message(d.quaternion, timestamp, offset),
-            rotation_matrix=__zero_heading_message(d.rotation_matrix, timestamp, offset),
-            euler_angles=__zero_heading_message(d.euler_angles, timestamp, offset),
-            linear_acceleration=__zero_heading_message(d.linear_acceleration, timestamp, offset),
-            earth_acceleration=__zero_heading_message(d.earth_acceleration, timestamp, offset),
+            quaternion=_zero_heading_message(d.quaternion, timestamp, offset),
+            rotation_matrix=_zero_heading_message(d.rotation_matrix, timestamp, offset),
+            euler_angles=_zero_heading_message(d.euler_angles, timestamp, offset),
+            linear_acceleration=_zero_heading_message(d.linear_acceleration, timestamp, offset),
+            earth_acceleration=_zero_heading_message(d.earth_acceleration, timestamp, offset),
         )
         for d in devices
     ]

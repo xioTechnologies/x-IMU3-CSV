@@ -26,7 +26,7 @@ from .data_messages import (
 from .device import Device, update_first_and_last_timestamps
 
 
-def __read_command(directory: Path) -> list[dict[str, Any]]:
+def _read_command(directory: Path) -> list[dict[str, Any]]:
     file_path = directory / "Command.json"
 
     if not file_path.is_file():
@@ -36,7 +36,7 @@ def __read_command(directory: Path) -> list[dict[str, Any]]:
         return json.load(file)
 
 
-def __parse_ping(command: list[dict[str, Any]]) -> tuple[str | None, str | None, str | None]:
+def _parse_ping(command: list[dict[str, Any]]) -> tuple[str | None, str | None, str | None]:
     for response in command:
         for key, value in response.items():
             if key == "ping":
@@ -48,7 +48,7 @@ def __parse_ping(command: list[dict[str, Any]]) -> tuple[str | None, str | None,
     return None, None, None
 
 
-def __parse_time(command: list[dict[str, Any]]) -> datetime | None:
+def _parse_time(command: list[dict[str, Any]]) -> datetime | None:
     for response in command:
         for key, value in response.items():
             if key == "time":
@@ -60,7 +60,7 @@ def __parse_time(command: list[dict[str, Any]]) -> datetime | None:
     return None
 
 
-def __read_csv(directory: Path, message_type: DataMessageType, filter: tuple[DataMessageType, ...]) -> np.ndarray:
+def _read_csv(directory: Path, message_type: DataMessageType, filter: tuple[DataMessageType, ...]) -> np.ndarray:
     csv = np.empty([0, 10])  # 10 is the maximum number of columns expected for any data message
     string = np.empty([0, 1])
 
@@ -83,12 +83,12 @@ def __read_csv(directory: Path, message_type: DataMessageType, filter: tuple[Dat
     return csv, string
 
 
-def __read_device(directory: Path, filter: tuple[DataMessageType, ...]) -> Device:
-    command = __read_command(directory)
+def _read_device(directory: Path, filter: tuple[DataMessageType, ...]) -> Device:
+    command = _read_command(directory)
 
-    interface, device_name, serial_number = __parse_ping(command)
+    interface, device_name, serial_number = _parse_ping(command)
 
-    time = __parse_time(command)
+    time = _parse_time(command)
 
     device = Device(
         command,
@@ -96,21 +96,21 @@ def __read_device(directory: Path, filter: tuple[DataMessageType, ...]) -> Devic
         device_name,
         serial_number,
         time,
-        Inertial(*__read_csv(directory, DataMessageType.INERTIAL, filter)),
-        Magnetometer(*__read_csv(directory, DataMessageType.MAGNETOMETER, filter)),
-        Quaternion(*__read_csv(directory, DataMessageType.QUATERNION, filter)),
-        RotationMatrix(*__read_csv(directory, DataMessageType.ROTATION_MATRIX, filter)),
-        EulerAngles(*__read_csv(directory, DataMessageType.EULER_ANGLES, filter)),
-        LinearAcceleration(*__read_csv(directory, DataMessageType.LINEAR_ACCELERATION, filter)),
-        EarthAcceleration(*__read_csv(directory, DataMessageType.EARTH_ACCELERATION, filter)),
-        AhrsStatus(*__read_csv(directory, DataMessageType.AHRS_STATUS, filter)),
-        HighGAccelerometer(*__read_csv(directory, DataMessageType.HIGH_G_ACCELEROMETER, filter)),
-        Temperature(*__read_csv(directory, DataMessageType.TEMPERATURE, filter)),
-        Battery(*__read_csv(directory, DataMessageType.BATTERY, filter)),
-        Rssi(*__read_csv(directory, DataMessageType.RSSI, filter)),
-        SerialAccessory(*__read_csv(directory, DataMessageType.SERIAL_ACCESSORY, filter)),
-        Notification(*__read_csv(directory, DataMessageType.NOTIFICATION, filter)),
-        Error(*__read_csv(directory, DataMessageType.ERROR, filter)),
+        Inertial(*_read_csv(directory, DataMessageType.INERTIAL, filter)),
+        Magnetometer(*_read_csv(directory, DataMessageType.MAGNETOMETER, filter)),
+        Quaternion(*_read_csv(directory, DataMessageType.QUATERNION, filter)),
+        RotationMatrix(*_read_csv(directory, DataMessageType.ROTATION_MATRIX, filter)),
+        EulerAngles(*_read_csv(directory, DataMessageType.EULER_ANGLES, filter)),
+        LinearAcceleration(*_read_csv(directory, DataMessageType.LINEAR_ACCELERATION, filter)),
+        EarthAcceleration(*_read_csv(directory, DataMessageType.EARTH_ACCELERATION, filter)),
+        AhrsStatus(*_read_csv(directory, DataMessageType.AHRS_STATUS, filter)),
+        HighGAccelerometer(*_read_csv(directory, DataMessageType.HIGH_G_ACCELEROMETER, filter)),
+        Temperature(*_read_csv(directory, DataMessageType.TEMPERATURE, filter)),
+        Battery(*_read_csv(directory, DataMessageType.BATTERY, filter)),
+        Rssi(*_read_csv(directory, DataMessageType.RSSI, filter)),
+        SerialAccessory(*_read_csv(directory, DataMessageType.SERIAL_ACCESSORY, filter)),
+        Notification(*_read_csv(directory, DataMessageType.NOTIFICATION, filter)),
+        Error(*_read_csv(directory, DataMessageType.ERROR, filter)),
         None,
         None,
     )
@@ -138,4 +138,4 @@ def read(path: Path, filter: DataMessageType | tuple[DataMessageType, ...] = tup
     if not device_directories:
         raise ValueError(f'"{path}" is empty')
 
-    return [__read_device(d, filter) for d in device_directories]
+    return [_read_device(d, filter) for d in device_directories]

@@ -6,7 +6,7 @@ from .data_messages import DataMessage
 from .device import Device, update_first_and_last_timestamps
 
 
-def __zero_first_timestamp(message: DataMessage, first_timestamp: int) -> DataMessage:
+def _zero_first_timestamp(message: DataMessage, first_timestamp: int) -> DataMessage:
     if len(message.timestamp) == 0:
         return message
 
@@ -32,21 +32,21 @@ def zero_first_timestamp(devices: list[Device], offset: int = 0) -> list[Device]
     devices = [
         replace(
             d,
-            inertial=__zero_first_timestamp(d.inertial, first_timestamp),
-            magnetometer=__zero_first_timestamp(d.magnetometer, first_timestamp),
-            quaternion=__zero_first_timestamp(d.quaternion, first_timestamp),
-            rotation_matrix=__zero_first_timestamp(d.rotation_matrix, first_timestamp),
-            euler_angles=__zero_first_timestamp(d.euler_angles, first_timestamp),
-            linear_acceleration=__zero_first_timestamp(d.linear_acceleration, first_timestamp),
-            earth_acceleration=__zero_first_timestamp(d.earth_acceleration, first_timestamp),
-            ahrs_status=__zero_first_timestamp(d.ahrs_status, first_timestamp),
-            high_g_accelerometer=__zero_first_timestamp(d.high_g_accelerometer, first_timestamp),
-            temperature=__zero_first_timestamp(d.temperature, first_timestamp),
-            battery=__zero_first_timestamp(d.battery, first_timestamp),
-            rssi=__zero_first_timestamp(d.rssi, first_timestamp),
-            serial_accessory=__zero_first_timestamp(d.serial_accessory, first_timestamp),
-            notification=__zero_first_timestamp(d.notification, first_timestamp),
-            error=__zero_first_timestamp(d.error, first_timestamp),
+            inertial=_zero_first_timestamp(d.inertial, first_timestamp),
+            magnetometer=_zero_first_timestamp(d.magnetometer, first_timestamp),
+            quaternion=_zero_first_timestamp(d.quaternion, first_timestamp),
+            rotation_matrix=_zero_first_timestamp(d.rotation_matrix, first_timestamp),
+            euler_angles=_zero_first_timestamp(d.euler_angles, first_timestamp),
+            linear_acceleration=_zero_first_timestamp(d.linear_acceleration, first_timestamp),
+            earth_acceleration=_zero_first_timestamp(d.earth_acceleration, first_timestamp),
+            ahrs_status=_zero_first_timestamp(d.ahrs_status, first_timestamp),
+            high_g_accelerometer=_zero_first_timestamp(d.high_g_accelerometer, first_timestamp),
+            temperature=_zero_first_timestamp(d.temperature, first_timestamp),
+            battery=_zero_first_timestamp(d.battery, first_timestamp),
+            rssi=_zero_first_timestamp(d.rssi, first_timestamp),
+            serial_accessory=_zero_first_timestamp(d.serial_accessory, first_timestamp),
+            notification=_zero_first_timestamp(d.notification, first_timestamp),
+            error=_zero_first_timestamp(d.error, first_timestamp),
         )
         for d in devices
     ]

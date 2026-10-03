@@ -71,50 +71,50 @@ class DataMessage(ABC):
 
 @dataclass(frozen=True)
 class Xyz:
-    __csv: np.ndarray
-    __column: int
+    _csv: np.ndarray
+    _column: int
 
     @property
     def xyz(self) -> np.ndarray:
-        return self.__csv[:, self.__column : self.__column + 3]
+        return self._csv[:, self._column : self._column + 3]
 
     @property
     def x(self) -> np.ndarray:
-        return self.__csv[:, self.__column]
+        return self._csv[:, self._column]
 
     @property
     def y(self) -> np.ndarray:
-        return self.__csv[:, self.__column + 1]
+        return self._csv[:, self._column + 1]
 
     @property
     def z(self) -> np.ndarray:
-        return self.__csv[:, self.__column + 2]
+        return self._csv[:, self._column + 2]
 
 
 @dataclass(frozen=True)
 class Wxyz:
-    __csv: np.ndarray
-    __column: int
+    _csv: np.ndarray
+    _column: int
 
     @property
     def wxyz(self) -> np.ndarray:
-        return self.__csv[:, self.__column : self.__column + 4]
+        return self._csv[:, self._column : self._column + 4]
 
     @property
     def w(self) -> np.ndarray:
-        return self.__csv[:, self.__column]
+        return self._csv[:, self._column]
 
     @property
     def x(self) -> np.ndarray:
-        return self.__csv[:, self.__column + 1]
+        return self._csv[:, self._column + 1]
 
     @property
     def y(self) -> np.ndarray:
-        return self.__csv[:, self.__column + 2]
+        return self._csv[:, self._column + 2]
 
     @property
     def z(self) -> np.ndarray:
-        return self.__csv[:, self.__column + 3]
+        return self._csv[:, self._column + 3]
 
 
 @dataclass(frozen=True)

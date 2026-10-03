@@ -7,7 +7,7 @@ from .data_messages import EulerAngles
 from .device import Device
 
 
-def __convert_to_euler_angles(device: Device) -> EulerAngles:
+def _convert_to_euler_angles(device: Device) -> EulerAngles:
     if len(device.quaternion.timestamp) > 0:
         timestamp = device.quaternion.timestamp
         rotations = scipy.spatial.transform.Rotation.from_quat(device.quaternion.quaternion.wxyz[:, [1, 2, 3, 0]])
@@ -39,4 +39,4 @@ def __convert_to_euler_angles(device: Device) -> EulerAngles:
 
 
 def convert_to_euler_angles(devices: list[Device]) -> list[Device]:
-    return [replace(d, euler_angles=__convert_to_euler_angles(d)) for d in devices]
+    return [replace(d, euler_angles=_convert_to_euler_angles(d)) for d in devices]
