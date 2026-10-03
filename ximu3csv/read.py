@@ -32,7 +32,7 @@ def _read_command(directory: Path) -> list[dict[str, Any]]:
     if not file_path.is_file():
         return []
 
-    with file_path.open() as file:
+    with file_path.open(encoding="utf-8") as file:
         return json.load(file)
 
 
