@@ -79,7 +79,7 @@ def _read_csv(directory: Path, message_type: DataMessageType, filter: tuple[Data
         csv = np.genfromtxt(file_path, delimiter=",", skip_header=1, ndmin=2)
 
         if message_type in (DataMessageType.AHRS_STATUS, DataMessageType.LTC, DataMessageType.NOTIFICATION, DataMessageType.ERROR):
-            string = np.genfromtxt(file_path, delimiter=",", skip_header=1, usecols=(1,), dtype=None, encoding="utf-8")  # TODO: support strings containing commas
+            string = np.genfromtxt(file_path, delimiter=",", skip_header=1, usecols=(1,), dtype=None, encoding="utf-8", ndmin=1)  # TODO: support strings containing commas
     except Exception:
         print(f"Unable to read file: {file_path}")
 
