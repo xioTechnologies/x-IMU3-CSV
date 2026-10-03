@@ -1,141 +1,174 @@
 import json
+from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-import numpy as np
-
+from .connection import Connection
 from .data_messages import (
     AhrsStatus,
     Battery,
-    DataMessageType,
+    Button,
+    DataMessage,
+    DataMessageFlag,
     EarthAcceleration,
     Error,
     EulerAngles,
     HighGAccelerometer,
     Inertial,
     LinearAcceleration,
+    Ltc,
     Magnetometer,
     Notification,
     Quaternion,
     RotationMatrix,
     Rssi,
     SerialAccessory,
+    Sync,
     Temperature,
 )
-from .device import Device, update_first_and_last_timestamps
+from .logged_data import LoggedData
+from .metadata import read_metadata
 
 
-def __read_command(directory: Path) -> list[dict[str, Any]]:
+def read(path: Path | str, data_messages: DataMessageFlag = DataMessageFlag.ALL) -> LoggedData:
+    """Read data written by the x-IMU3 data logger or file converter.
+
+    If the directory contains Metadata.json then connections are read in
+    the order listed. Otherwise, each subdirectory is read as a connection,
+    in alphabetical order.
+
+    Parameters
+    ----------
+    path
+        Logged data directory.
+    data_messages
+        Data messages to read. Data messages not included are empty.
+
+    Returns
+    -------
+    LoggedData
+        Logged data.
+    """
+
+    path = Path(path).absolute()
+
+    if not path.exists():
+        raise FileNotFoundError(f"Directory not found: {path}")
+
+    if not path.is_dir():
+        raise NotADirectoryError(f"Not a directory: {path}")
+
+    metadata = read_metadata(path)
+
+    if metadata is not None:
+        return LoggedData(
+            metadata.name,
+            metadata.time,
+            tuple(
+                replace(
+                    _read_connection(path / c.directory, data_messages),
+                    model=c.model,
+                    serial_number=c.serial_number,
+                    device_name=c.device_name,
+                    config=c.config,
+                )
+                for c in metadata.connections
+            ),
+        )
+
+    connection_directories = [d for d in sorted(path.iterdir()) if d.is_dir() and not d.name.startswith(".")]
+
+    if not connection_directories:
+        raise FileNotFoundError(f"No connection directories found: {path}")
+
+    connections = tuple(_read_connection(d, data_messages) for d in connection_directories)
+
+    ping_responses = tuple(_get_ping_response(c.command) for c in connections)
+
+    times = tuple(_get_time(c.command) for c in connections)
+
+    return LoggedData(
+        path.name,
+        max((t for t in times if t is not None), default=None),
+        tuple(
+            replace(
+                c,
+                model=m,
+                serial_number=s,
+                device_name=d,
+            )
+            for c, (m, s, d) in zip(connections, ping_responses)
+        ),
+    )
+
+
+def _read_connection(directory: Path, data_messages: DataMessageFlag) -> Connection:
+    if not directory.is_dir():
+        raise FileNotFoundError(f"Directory not found: {directory}")
+
+    return Connection(
+        None,
+        None,
+        None,
+        None,
+        directory.name,
+        _read_command(directory),
+        _read_data_message(directory, Inertial, DataMessageFlag.INERTIAL, data_messages),
+        _read_data_message(directory, Magnetometer, DataMessageFlag.MAGNETOMETER, data_messages),
+        _read_data_message(directory, HighGAccelerometer, DataMessageFlag.HIGH_G_ACCELEROMETER, data_messages),
+        _read_data_message(directory, Quaternion, DataMessageFlag.QUATERNION, data_messages),
+        _read_data_message(directory, RotationMatrix, DataMessageFlag.ROTATION_MATRIX, data_messages),
+        _read_data_message(directory, EulerAngles, DataMessageFlag.EULER_ANGLES, data_messages),
+        _read_data_message(directory, LinearAcceleration, DataMessageFlag.LINEAR_ACCELERATION, data_messages),
+        _read_data_message(directory, EarthAcceleration, DataMessageFlag.EARTH_ACCELERATION, data_messages),
+        _read_data_message(directory, AhrsStatus, DataMessageFlag.AHRS_STATUS, data_messages),
+        _read_data_message(directory, SerialAccessory, DataMessageFlag.SERIAL_ACCESSORY, data_messages),
+        _read_data_message(directory, Sync, DataMessageFlag.SYNC, data_messages),
+        _read_data_message(directory, Ltc, DataMessageFlag.LTC, data_messages),
+        _read_data_message(directory, Temperature, DataMessageFlag.TEMPERATURE, data_messages),
+        _read_data_message(directory, Battery, DataMessageFlag.BATTERY, data_messages),
+        _read_data_message(directory, Rssi, DataMessageFlag.RSSI, data_messages),
+        _read_data_message(directory, Button, DataMessageFlag.BUTTON, data_messages),
+        _read_data_message(directory, Notification, DataMessageFlag.NOTIFICATION, data_messages),
+        _read_data_message(directory, Error, DataMessageFlag.ERROR, data_messages),
+    )
+
+
+def _read_command(directory: Path) -> list[dict[str, Any]]:
     file_path = directory / "Command.json"
 
     if not file_path.is_file():
         return []
 
-    with file_path.open() as file:
-        return json.load(file)
-
-
-def __parse_ping(command: list[dict[str, Any]]) -> tuple[str | None, str | None, str | None]:
-    for response in command:
-        for key, value in response.items():
-            if key == "ping":
-                try:
-                    return value["interface"], value["name"], value["sn"]
-                except Exception as _:
-                    print(f"Unable to parse ping response {value}")
-
-    return None, None, None
-
-
-def __parse_time(command: list[dict[str, Any]]) -> datetime | None:
-    for response in command:
-        for key, value in response.items():
-            if key == "time":
-                try:
-                    return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
-                except Exception as _:
-                    print(f"Unable to parse time {value}")
-
-    return None
-
-
-def __read_csv(directory: Path, message_type: DataMessageType, filter: tuple[DataMessageType, ...]) -> np.ndarray:
-    csv = np.empty([0, 10])  # 10 is the maximum number of columns expected for any data message
-    string = np.empty([0, 1])
-
-    if message_type not in filter:
-        return csv, string
-
-    file_path = directory / message_type.file_name
-
-    if not file_path.is_file():
-        return csv, string
-
     try:
-        csv = np.genfromtxt(file_path, delimiter=",", skip_header=1, ndmin=2)
-
-        if message_type in (DataMessageType.NOTIFICATION, DataMessageType.ERROR):
-            string = np.genfromtxt(file_path, delimiter=",", skip_header=1, usecols=1, dtype=None, encoding=None)  # TODO: support strings containing commas
-    except Exception as _:
-        print(f"Unable to read file {file_path}")
-
-    return csv, string
+        with file_path.open(encoding="utf-8") as file:
+            return json.load(file)
+    except Exception as exception:
+        exception.add_note(f"Unable to read file: {file_path}")
+        raise
 
 
-def __read_device(directory: Path, filter: tuple[DataMessageType, ...]) -> Device:
-    command = __read_command(directory)
+def _read_data_message(directory: Path, data_message_type: type[DataMessage], flag: DataMessageFlag, data_messages: DataMessageFlag) -> DataMessage:
+    if flag not in data_messages:
+        return data_message_type._empty()
 
-    interface, device_name, serial_number = __parse_ping(command)
-
-    time = __parse_time(command)
-
-    device = Device(
-        command,
-        interface,
-        device_name,
-        serial_number,
-        time,
-        Inertial(*__read_csv(directory, DataMessageType.INERTIAL, filter)),
-        Magnetometer(*__read_csv(directory, DataMessageType.MAGNETOMETER, filter)),
-        Quaternion(*__read_csv(directory, DataMessageType.QUATERNION, filter)),
-        RotationMatrix(*__read_csv(directory, DataMessageType.ROTATION_MATRIX, filter)),
-        EulerAngles(*__read_csv(directory, DataMessageType.EULER_ANGLES, filter)),
-        LinearAcceleration(*__read_csv(directory, DataMessageType.LINEAR_ACCELERATION, filter)),
-        EarthAcceleration(*__read_csv(directory, DataMessageType.EARTH_ACCELERATION, filter)),
-        AhrsStatus(*__read_csv(directory, DataMessageType.AHRS_STATUS, filter)),
-        HighGAccelerometer(*__read_csv(directory, DataMessageType.HIGH_G_ACCELEROMETER, filter)),
-        Temperature(*__read_csv(directory, DataMessageType.TEMPERATURE, filter)),
-        Battery(*__read_csv(directory, DataMessageType.BATTERY, filter)),
-        Rssi(*__read_csv(directory, DataMessageType.RSSI, filter)),
-        SerialAccessory(*__read_csv(directory, DataMessageType.SERIAL_ACCESSORY, filter)),
-        Notification(*__read_csv(directory, DataMessageType.NOTIFICATION, filter)),
-        Error(*__read_csv(directory, DataMessageType.ERROR, filter)),
-        None,
-        None,
-    )
-
-    return update_first_and_last_timestamps(device)
+    return data_message_type._read(directory)
 
 
-def read(path: Path, filter: DataMessageType | tuple[DataMessageType, ...] = tuple(DataMessageType)) -> list[Device]:
-    path = Path(path)
+def _get_ping_response(command: list[dict[str, Any]]) -> tuple[str | None, str | None, str | None]:
+    pings = [c["ping"] for c in command if "ping" in c]
 
-    if not path.is_absolute():
-        path = Path(__import__("__main__").__file__).parent / path
+    if not pings or not isinstance(pings[0], dict):
+        return None, None, None
 
-    if not path.exists():
-        raise ValueError(f'"{path}" does not exist')
+    return pings[0].get("model"), pings[0].get("sn"), pings[0].get("name")
 
-    if not path.is_dir():
-        raise ValueError(f'"{path}" is not a directory')
 
-    if isinstance(filter, DataMessageType):
-        filter = (filter,)
+def _get_time(command: list[dict[str, Any]]) -> datetime | None:
+    times = [c["time"] for c in command if "time" in c]
 
-    device_directories = [d for d in path.iterdir() if d.is_dir() and not d.name.startswith(".")]
+    if not times or not isinstance(times[0], str):
+        return None
 
-    if not device_directories:
-        raise ValueError(f'"{path}" is empty')
-
-    return [__read_device(d, filter) for d in device_directories]
+    return datetime.strptime(times[0], "%Y-%m-%d %H:%M:%S")
