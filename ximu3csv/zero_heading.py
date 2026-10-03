@@ -39,7 +39,7 @@ def _zero_heading_message(message: DataMessage, timestamp: int, offset: float) -
             )
         )
     elif isinstance(message, EulerAngles):
-        rotations = scipy.spatial.transform.Rotation.from_euler("ZYX", message.euler_angles[:, [2, 1, 0]], degrees=True)
+        rotations = scipy.spatial.transform.Rotation.from_euler("ZYX", message.roll_pitch_yaw[:, [2, 1, 0]], degrees=True)
 
         csv = np.column_stack(
             (
@@ -48,7 +48,7 @@ def _zero_heading_message(message: DataMessage, timestamp: int, offset: float) -
             )
         )
     elif isinstance(message, RotationMatrix):
-        rotations = scipy.spatial.transform.Rotation.from_matrix(message.rotation_matrix.reshape(-1, 3, 3))
+        rotations = scipy.spatial.transform.Rotation.from_matrix(message.xx_to_zz.reshape(-1, 3, 3))
 
         csv = np.column_stack(
             (

@@ -79,50 +79,76 @@ class DataMessage(ABC):
 
 
 @dataclass(frozen=True)
-class Xyz:
-    _csv: np.ndarray
-    _column: int
-
-    @property
-    def xyz(self) -> np.ndarray:
-        return self._csv[:, self._column : self._column + 3]
-
-    @property
-    def x(self) -> np.ndarray:
-        return self._csv[:, self._column]
-
-    @property
-    def y(self) -> np.ndarray:
-        return self._csv[:, self._column + 1]
-
-    @property
-    def z(self) -> np.ndarray:
-        return self._csv[:, self._column + 2]
-
-
-@dataclass(frozen=True)
 class Inertial(DataMessage):
     @property
-    def gyroscope(self) -> Xyz:
-        return Xyz(self._csv, 1)
+    def gyroscope_xyz(self) -> np.ndarray:
+        return self._csv[:, 1:4]
 
     @property
-    def accelerometer(self) -> Xyz:
-        return Xyz(self._csv, 4)
+    def gyroscope_x(self) -> np.ndarray:
+        return self._csv[:, 1]
+
+    @property
+    def gyroscope_y(self) -> np.ndarray:
+        return self._csv[:, 2]
+
+    @property
+    def gyroscope_z(self) -> np.ndarray:
+        return self._csv[:, 3]
+
+    @property
+    def accelerometer_xyz(self) -> np.ndarray:
+        return self._csv[:, 4:7]
+
+    @property
+    def accelerometer_x(self) -> np.ndarray:
+        return self._csv[:, 4]
+
+    @property
+    def accelerometer_y(self) -> np.ndarray:
+        return self._csv[:, 5]
+
+    @property
+    def accelerometer_z(self) -> np.ndarray:
+        return self._csv[:, 6]
 
 
 @dataclass(frozen=True)
 class Magnetometer(DataMessage):
     @property
-    def magnetometer(self) -> Xyz:
-        return Xyz(self._csv, 1)
+    def xyz(self) -> np.ndarray:
+        return self._csv[:, 1:4]
+
+    @property
+    def x(self) -> np.ndarray:
+        return self._csv[:, 1]
+
+    @property
+    def y(self) -> np.ndarray:
+        return self._csv[:, 2]
+
+    @property
+    def z(self) -> np.ndarray:
+        return self._csv[:, 3]
 
 
 @dataclass(frozen=True)
 class HighGAccelerometer(DataMessage):
     @property
-    def high_g_accelerometer(self) -> Xyz:
-        return Xyz(self._csv, 1)
+    def xyz(self) -> np.ndarray:
+        return self._csv[:, 1:4]
+
+    @property
+    def x(self) -> np.ndarray:
+        return self._csv[:, 1]
+
+    @property
+    def y(self) -> np.ndarray:
+        return self._csv[:, 2]
+
+    @property
+    def z(self) -> np.ndarray:
+        return self._csv[:, 3]
 
 
 @dataclass(frozen=True)
@@ -151,7 +177,7 @@ class Quaternion(DataMessage):
 @dataclass(frozen=True)
 class RotationMatrix(DataMessage):
     @property
-    def rotation_matrix(self) -> np.ndarray:
+    def xx_to_zz(self) -> np.ndarray:
         return self._csv[:, 1:10]
 
     @property
@@ -194,7 +220,7 @@ class RotationMatrix(DataMessage):
 @dataclass(frozen=True)
 class EulerAngles(DataMessage):
     @property
-    def euler_angles(self) -> np.ndarray:
+    def roll_pitch_yaw(self) -> np.ndarray:
         return self._csv[:, 1:4]
 
     @property
@@ -213,15 +239,39 @@ class EulerAngles(DataMessage):
 @dataclass(frozen=True)
 class LinearAcceleration(DataMessage):
     @property
-    def linear_acceleration(self) -> Xyz:
-        return Xyz(self._csv, 1)
+    def xyz(self) -> np.ndarray:
+        return self._csv[:, 1:4]
+
+    @property
+    def x(self) -> np.ndarray:
+        return self._csv[:, 1]
+
+    @property
+    def y(self) -> np.ndarray:
+        return self._csv[:, 2]
+
+    @property
+    def z(self) -> np.ndarray:
+        return self._csv[:, 3]
 
 
 @dataclass(frozen=True)
 class EarthAcceleration(DataMessage):
     @property
-    def earth_acceleration(self) -> Xyz:
-        return Xyz(self._csv, 1)
+    def xyz(self) -> np.ndarray:
+        return self._csv[:, 1:4]
+
+    @property
+    def x(self) -> np.ndarray:
+        return self._csv[:, 1]
+
+    @property
+    def y(self) -> np.ndarray:
+        return self._csv[:, 2]
+
+    @property
+    def z(self) -> np.ndarray:
+        return self._csv[:, 3]
 
 
 @dataclass(frozen=True)

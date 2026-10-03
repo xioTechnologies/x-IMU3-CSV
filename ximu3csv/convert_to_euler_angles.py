@@ -14,7 +14,7 @@ def _convert_to_euler_angles(device: Device) -> EulerAngles:
 
     elif len(device.rotation_matrix.timestamp) > 0:
         timestamp = device.rotation_matrix.timestamp
-        rotations = scipy.spatial.transform.Rotation.from_matrix(device.rotation_matrix.rotation_matrix.reshape(-1, 3, 3))
+        rotations = scipy.spatial.transform.Rotation.from_matrix(device.rotation_matrix.xx_to_zz.reshape(-1, 3, 3))
 
     else:
         return device.euler_angles
