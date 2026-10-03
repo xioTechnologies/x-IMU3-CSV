@@ -8,6 +8,7 @@ import numpy as np
 from .data_messages import (
     AhrsStatus,
     Battery,
+    Button,
     DataMessageType,
     EarthAcceleration,
     Error,
@@ -15,12 +16,14 @@ from .data_messages import (
     HighGAccelerometer,
     Inertial,
     LinearAcceleration,
+    Ltc,
     Magnetometer,
     Notification,
     Quaternion,
     RotationMatrix,
     Rssi,
     SerialAccessory,
+    Sync,
     Temperature,
 )
 from .device import Device, update_first_and_last_timestamps
@@ -75,7 +78,7 @@ def _read_csv(directory: Path, message_type: DataMessageType, filter: tuple[Data
     try:
         csv = np.genfromtxt(file_path, delimiter=",", skip_header=1, ndmin=2)
 
-        if message_type in (DataMessageType.NOTIFICATION, DataMessageType.ERROR):
+        if message_type in (DataMessageType.AHRS_STATUS, DataMessageType.LTC, DataMessageType.NOTIFICATION, DataMessageType.ERROR):
             string = np.genfromtxt(file_path, delimiter=",", skip_header=1, usecols=(1,), dtype=None, encoding="utf-8")  # TODO: support strings containing commas
     except Exception:
         print(f"Unable to read file: {file_path}")
@@ -98,17 +101,20 @@ def _read_device(directory: Path, filter: tuple[DataMessageType, ...]) -> Device
         time,
         Inertial(*_read_csv(directory, DataMessageType.INERTIAL, filter)),
         Magnetometer(*_read_csv(directory, DataMessageType.MAGNETOMETER, filter)),
+        HighGAccelerometer(*_read_csv(directory, DataMessageType.HIGH_G_ACCELEROMETER, filter)),
         Quaternion(*_read_csv(directory, DataMessageType.QUATERNION, filter)),
         RotationMatrix(*_read_csv(directory, DataMessageType.ROTATION_MATRIX, filter)),
         EulerAngles(*_read_csv(directory, DataMessageType.EULER_ANGLES, filter)),
         LinearAcceleration(*_read_csv(directory, DataMessageType.LINEAR_ACCELERATION, filter)),
         EarthAcceleration(*_read_csv(directory, DataMessageType.EARTH_ACCELERATION, filter)),
         AhrsStatus(*_read_csv(directory, DataMessageType.AHRS_STATUS, filter)),
-        HighGAccelerometer(*_read_csv(directory, DataMessageType.HIGH_G_ACCELEROMETER, filter)),
+        SerialAccessory(*_read_csv(directory, DataMessageType.SERIAL_ACCESSORY, filter)),
+        Sync(*_read_csv(directory, DataMessageType.SYNC, filter)),
+        Ltc(*_read_csv(directory, DataMessageType.LTC, filter)),
         Temperature(*_read_csv(directory, DataMessageType.TEMPERATURE, filter)),
         Battery(*_read_csv(directory, DataMessageType.BATTERY, filter)),
         Rssi(*_read_csv(directory, DataMessageType.RSSI, filter)),
-        SerialAccessory(*_read_csv(directory, DataMessageType.SERIAL_ACCESSORY, filter)),
+        Button(*_read_csv(directory, DataMessageType.BUTTON, filter)),
         Notification(*_read_csv(directory, DataMessageType.NOTIFICATION, filter)),
         Error(*_read_csv(directory, DataMessageType.ERROR, filter)),
         None,

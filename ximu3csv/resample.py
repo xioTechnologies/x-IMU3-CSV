@@ -5,9 +5,7 @@ import scipy
 
 from .data_messages import (
     DataMessage,
-    EarthAcceleration,
     EulerAngles,
-    LinearAcceleration,
     Quaternion,
     RotationMatrix,
 )
@@ -60,12 +58,11 @@ def _resample(message: DataMessage, timestamp: np.ndarray) -> DataMessage:
     if len(message.timestamp) == 0:
         return message
 
-    if isinstance(message, (Quaternion, LinearAcceleration, EarthAcceleration)):
+    if isinstance(message, Quaternion):
         csv = np.column_stack(
             (
                 timestamp,
-                _slerp_quaternion(message.timestamp / 1e6, message._csv[:, 1:5], timestamp / 1e6),
-                _interpolate(message.timestamp / 1e6, message._csv[:, 5:], timestamp / 1e6),
+                _slerp_quaternion(message.timestamp / 1e6, message._csv[:, 1:], timestamp / 1e6),
             )
         )
     elif isinstance(message, EulerAngles):
@@ -113,16 +110,18 @@ def resample(devices: list[Device], sample_rate: float) -> list[Device]:
             d,
             inertial=_resample(d.inertial, timestamp),
             magnetometer=_resample(d.magnetometer, timestamp),
+            high_g_accelerometer=_resample(d.high_g_accelerometer, timestamp),
             quaternion=_resample(d.quaternion, timestamp),
             rotation_matrix=_resample(d.rotation_matrix, timestamp),
             euler_angles=_resample(d.euler_angles, timestamp),
             linear_acceleration=_resample(d.linear_acceleration, timestamp),
             earth_acceleration=_resample(d.earth_acceleration, timestamp),
-            high_g_accelerometer=_resample(d.high_g_accelerometer, timestamp),
+            serial_accessory=_resample(d.serial_accessory, timestamp),
+            sync=_resample(d.sync, timestamp),  # TODO: Do not interpolate edges
             temperature=_resample(d.temperature, timestamp),
             battery=_resample(d.battery, timestamp),
             rssi=_resample(d.rssi, timestamp),
-            serial_accessory=_resample(d.serial_accessory, timestamp),
+            button=_resample(d.button, timestamp),  # TODO: Do not interpolate edges
         )
         for d in devices
     ]

@@ -8,17 +8,20 @@ import numpy as np
 class DataMessageType(Enum):
     INERTIAL = auto()
     MAGNETOMETER = auto()
+    HIGH_G_ACCELEROMETER = auto()
     QUATERNION = auto()
     ROTATION_MATRIX = auto()
     EULER_ANGLES = auto()
     LINEAR_ACCELERATION = auto()
     EARTH_ACCELERATION = auto()
     AHRS_STATUS = auto()
-    HIGH_G_ACCELEROMETER = auto()
+    SERIAL_ACCESSORY = auto()
+    SYNC = auto()
+    LTC = auto()
     TEMPERATURE = auto()
     BATTERY = auto()
     RSSI = auto()
-    SERIAL_ACCESSORY = auto()
+    BUTTON = auto()
     NOTIFICATION = auto()
     ERROR = auto()
 
@@ -29,6 +32,8 @@ class DataMessageType(Enum):
                 base_name = "Inertial"
             case DataMessageType.MAGNETOMETER:
                 base_name = "Magnetometer"
+            case DataMessageType.HIGH_G_ACCELEROMETER:
+                base_name = "HighGAccelerometer"
             case DataMessageType.QUATERNION:
                 base_name = "Quaternion"
             case DataMessageType.ROTATION_MATRIX:
@@ -41,16 +46,20 @@ class DataMessageType(Enum):
                 base_name = "EarthAcceleration"
             case DataMessageType.AHRS_STATUS:
                 base_name = "AhrsStatus"
-            case DataMessageType.HIGH_G_ACCELEROMETER:
-                base_name = "HighGAccelerometer"
+            case DataMessageType.SERIAL_ACCESSORY:
+                base_name = "SerialAccessory"
+            case DataMessageType.SYNC:
+                base_name = "Sync"
+            case DataMessageType.LTC:
+                base_name = "Ltc"
             case DataMessageType.TEMPERATURE:
                 base_name = "Temperature"
             case DataMessageType.BATTERY:
                 base_name = "Battery"
             case DataMessageType.RSSI:
                 base_name = "Rssi"
-            case DataMessageType.SERIAL_ACCESSORY:
-                base_name = "SerialAccessory"
+            case DataMessageType.BUTTON:
+                base_name = "Button"
             case DataMessageType.NOTIFICATION:
                 base_name = "Notification"
             case DataMessageType.ERROR:
@@ -92,32 +101,6 @@ class Xyz:
 
 
 @dataclass(frozen=True)
-class Wxyz:
-    _csv: np.ndarray
-    _column: int
-
-    @property
-    def wxyz(self) -> np.ndarray:
-        return self._csv[:, self._column : self._column + 4]
-
-    @property
-    def w(self) -> np.ndarray:
-        return self._csv[:, self._column]
-
-    @property
-    def x(self) -> np.ndarray:
-        return self._csv[:, self._column + 1]
-
-    @property
-    def y(self) -> np.ndarray:
-        return self._csv[:, self._column + 2]
-
-    @property
-    def z(self) -> np.ndarray:
-        return self._csv[:, self._column + 3]
-
-
-@dataclass(frozen=True)
 class Inertial(DataMessage):
     @property
     def gyroscope(self) -> Xyz:
@@ -136,10 +119,33 @@ class Magnetometer(DataMessage):
 
 
 @dataclass(frozen=True)
+class HighGAccelerometer(DataMessage):
+    @property
+    def high_g_accelerometer(self) -> Xyz:
+        return Xyz(self._csv, 1)
+
+
+@dataclass(frozen=True)
 class Quaternion(DataMessage):
     @property
-    def quaternion(self) -> Wxyz:
-        return Wxyz(self._csv, 1)
+    def wxyz(self) -> np.ndarray:
+        return self._csv[:, 1:5]
+
+    @property
+    def w(self) -> np.ndarray:
+        return self._csv[:, 1]
+
+    @property
+    def x(self) -> np.ndarray:
+        return self._csv[:, 2]
+
+    @property
+    def y(self) -> np.ndarray:
+        return self._csv[:, 3]
+
+    @property
+    def z(self) -> np.ndarray:
+        return self._csv[:, 4]
 
 
 @dataclass(frozen=True)
@@ -207,49 +213,43 @@ class EulerAngles(DataMessage):
 @dataclass(frozen=True)
 class LinearAcceleration(DataMessage):
     @property
-    def quaternion(self) -> Wxyz:
-        return Wxyz(self._csv, 1)
-
-    @property
     def linear_acceleration(self) -> Xyz:
-        return Xyz(self._csv, 5)
+        return Xyz(self._csv, 1)
 
 
 @dataclass(frozen=True)
 class EarthAcceleration(DataMessage):
     @property
-    def quaternion(self) -> Wxyz:
-        return Wxyz(self._csv, 1)
-
-    @property
     def earth_acceleration(self) -> Xyz:
-        return Xyz(self._csv, 5)
+        return Xyz(self._csv, 1)
 
 
 @dataclass(frozen=True)
 class AhrsStatus(DataMessage):
     @property
-    def initialising(self) -> np.ndarray:
-        return self._csv[:, 1]
-
-    @property
-    def angular_rate_recovery(self) -> np.ndarray:
-        return self._csv[:, 2]
-
-    @property
-    def acceleration_rate_recovery(self) -> np.ndarray:
-        return self._csv[:, 3]
-
-    @property
-    def magnetic_rate_recovery(self) -> np.ndarray:
-        return self._csv[:, 4]
+    def string(self) -> np.ndarray:
+        return self._string
 
 
 @dataclass(frozen=True)
-class HighGAccelerometer(DataMessage):
+class SerialAccessory(DataMessage):
     @property
-    def high_g_accelerometer(self) -> Xyz:
-        return Xyz(self._csv, 1)
+    def csv(self) -> np.ndarray:
+        return self._csv[:, 1:]
+
+
+@dataclass(frozen=True)
+class Sync(DataMessage):
+    @property
+    def edge(self) -> np.ndarray:
+        return self._csv[:, 1]
+
+
+@dataclass(frozen=True)
+class Ltc(DataMessage):
+    @property
+    def string(self) -> np.ndarray:
+        return self._string
 
 
 @dataclass(frozen=True)
@@ -286,10 +286,10 @@ class Rssi(DataMessage):
 
 
 @dataclass(frozen=True)
-class SerialAccessory(DataMessage):
+class Button(DataMessage):
     @property
-    def csv(self) -> np.ndarray:
-        return self._csv[:, 1:]
+    def state(self) -> np.ndarray:
+        return self._csv[:, 1]
 
 
 @dataclass(frozen=True)

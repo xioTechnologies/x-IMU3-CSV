@@ -10,19 +10,11 @@ from .device import Device
 def _convert_to_euler_angles(device: Device) -> EulerAngles:
     if len(device.quaternion.timestamp) > 0:
         timestamp = device.quaternion.timestamp
-        rotations = scipy.spatial.transform.Rotation.from_quat(device.quaternion.quaternion.wxyz[:, [1, 2, 3, 0]])
+        rotations = scipy.spatial.transform.Rotation.from_quat(device.quaternion.wxyz[:, [1, 2, 3, 0]])
 
     elif len(device.rotation_matrix.timestamp) > 0:
         timestamp = device.rotation_matrix.timestamp
         rotations = scipy.spatial.transform.Rotation.from_matrix(device.rotation_matrix.rotation_matrix.reshape(-1, 3, 3))
-
-    elif len(device.linear_acceleration.timestamp) > 0:
-        timestamp = device.linear_acceleration.timestamp
-        rotations = scipy.spatial.transform.Rotation.from_quat(device.linear_acceleration.quaternion.wxyz[:, [1, 2, 3, 0]])
-
-    elif len(device.earth_acceleration.timestamp) > 0:
-        timestamp = device.earth_acceleration.timestamp
-        rotations = scipy.spatial.transform.Rotation.from_quat(device.earth_acceleration.quaternion.wxyz[:, [1, 2, 3, 0]])
 
     else:
         return device.euler_angles

@@ -5,9 +5,7 @@ import scipy
 
 from .data_messages import (
     DataMessage,
-    EarthAcceleration,
     EulerAngles,
-    LinearAcceleration,
     Quaternion,
     RotationMatrix,
 )
@@ -31,14 +29,13 @@ def _zero_heading_message(message: DataMessage, timestamp: int, offset: float) -
 
     index = np.argmax(message.timestamp >= timestamp)
 
-    if isinstance(message, (Quaternion, LinearAcceleration, EarthAcceleration)):
-        rotations = scipy.spatial.transform.Rotation.from_quat(message.quaternion.wxyz[:, [1, 2, 3, 0]])
+    if isinstance(message, Quaternion):
+        rotations = scipy.spatial.transform.Rotation.from_quat(message.wxyz[:, [1, 2, 3, 0]])
 
         csv = np.column_stack(
             (
                 message.timestamp,
                 _zero_heading_rotations(rotations, index, offset).as_quat()[:, [3, 0, 1, 2]],
-                message._csv[:, 5:],
             )
         )
     elif isinstance(message, EulerAngles):
@@ -70,8 +67,7 @@ def zero_heading(devices: list[Device], timestamp: int = 0, offset: float = 0) -
             quaternion=_zero_heading_message(d.quaternion, timestamp, offset),
             rotation_matrix=_zero_heading_message(d.rotation_matrix, timestamp, offset),
             euler_angles=_zero_heading_message(d.euler_angles, timestamp, offset),
-            linear_acceleration=_zero_heading_message(d.linear_acceleration, timestamp, offset),
-            earth_acceleration=_zero_heading_message(d.earth_acceleration, timestamp, offset),
+            # TODO: Rotate earth_acceleration
         )
         for d in devices
     ]

@@ -5,6 +5,7 @@ from typing import Any
 from .data_messages import (
     AhrsStatus,
     Battery,
+    Button,
     DataMessage,
     EarthAcceleration,
     Error,
@@ -12,12 +13,14 @@ from .data_messages import (
     HighGAccelerometer,
     Inertial,
     LinearAcceleration,
+    Ltc,
     Magnetometer,
     Notification,
     Quaternion,
     RotationMatrix,
     Rssi,
     SerialAccessory,
+    Sync,
     Temperature,
 )
 
@@ -38,17 +41,20 @@ class Device:
     # *.csv files
     inertial: Inertial
     magnetometer: Magnetometer
+    high_g_accelerometer: HighGAccelerometer
     quaternion: Quaternion
     rotation_matrix: RotationMatrix
     euler_angles: EulerAngles
     linear_acceleration: LinearAcceleration
     earth_acceleration: EarthAcceleration
     ahrs_status: AhrsStatus
-    high_g_accelerometer: HighGAccelerometer
+    serial_accessory: SerialAccessory
+    sync: Sync
+    ltc: Ltc
     temperature: Temperature
     battery: Battery
     rssi: Rssi
-    serial_accessory: SerialAccessory
+    button: Button
     notification: Notification
     error: Error
 
