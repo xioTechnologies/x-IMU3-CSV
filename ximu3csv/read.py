@@ -118,11 +118,8 @@ def _read_device(directory: Path, filter: tuple[DataMessageType, ...]) -> Device
     return update_first_and_last_timestamps(device)
 
 
-def read(path: Path, filter: DataMessageType | tuple[DataMessageType, ...] = tuple(DataMessageType)) -> list[Device]:
-    path = Path(path)
-
-    if not path.is_absolute():
-        path = Path(__import__("__main__").__file__).parent / path
+def read(path: Path | str, filter: DataMessageType | tuple[DataMessageType, ...] = tuple(DataMessageType)) -> list[Device]:
+    path = Path(path).absolute()
 
     if not path.exists():
         raise ValueError(f'"{path}" does not exist')
