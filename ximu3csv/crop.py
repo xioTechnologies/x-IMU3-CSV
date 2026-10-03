@@ -22,10 +22,10 @@ def crop(devices: list[Device], start: int = 0, stop: int = 2**64 - 1) -> list[D
         return devices
 
     if start > max(last_timestamps):
-        raise ValueError(f"Start {start} is after last timestamp {max(last_timestamps)}")
+        raise ValueError(f"Start is after last timestamp: {start} > {max(last_timestamps)}")
 
     if stop < min(first_timestamps):
-        raise ValueError(f"Stop {stop} is before first timestamp {min(first_timestamps)}")
+        raise ValueError(f"Stop is before first timestamp: {stop} < {min(first_timestamps)}")
 
     devices = [
         replace(

@@ -42,8 +42,8 @@ def _parse_ping(command: list[dict[str, Any]]) -> tuple[str | None, str | None, 
             if key == "ping":
                 try:
                     return value["interface"], value["name"], value["sn"]
-                except Exception as _:
-                    print(f"Unable to parse ping response {value}")
+                except Exception:
+                    print(f"Unable to parse ping response: {value}")
 
     return None, None, None
 
@@ -54,8 +54,8 @@ def _parse_time(command: list[dict[str, Any]]) -> datetime | None:
             if key == "time":
                 try:
                     return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
-                except Exception as _:
-                    print(f"Unable to parse time {value}")
+                except Exception:
+                    print(f"Unable to parse time: {value}")
 
     return None
 
@@ -77,8 +77,8 @@ def _read_csv(directory: Path, message_type: DataMessageType, filter: tuple[Data
 
         if message_type in (DataMessageType.NOTIFICATION, DataMessageType.ERROR):
             string = np.genfromtxt(file_path, delimiter=",", skip_header=1, usecols=1, dtype=None, encoding=None)  # TODO: support strings containing commas
-    except Exception as _:
-        print(f"Unable to read file {file_path}")
+    except Exception:
+        print(f"Unable to read file: {file_path}")
 
     return csv, string
 
@@ -122,10 +122,10 @@ def read(path: Path | str, filter: DataMessageType | tuple[DataMessageType, ...]
     path = Path(path).absolute()
 
     if not path.exists():
-        raise ValueError(f'"{path}" does not exist')
+        raise FileNotFoundError(f"Directory not found: {path}")
 
     if not path.is_dir():
-        raise ValueError(f'"{path}" is not a directory')
+        raise NotADirectoryError(f"Not a directory: {path}")
 
     if isinstance(filter, DataMessageType):
         filter = (filter,)
@@ -133,6 +133,6 @@ def read(path: Path | str, filter: DataMessageType | tuple[DataMessageType, ...]
     device_directories = [d for d in path.iterdir() if d.is_dir() and not d.name.startswith(".")]
 
     if not device_directories:
-        raise ValueError(f'"{path}" is empty')
+        raise FileNotFoundError(f"No device directories found: {path}")
 
     return [_read_device(d, filter) for d in device_directories]
