@@ -1,6 +1,6 @@
 from dataclasses import replace
 
-from .device import Device, update_first_and_last_timestamps
+from .device import Device
 
 
 def crop(devices: list[Device], start: int = 0, stop: int = 2**64 - 1) -> list[Device]:
@@ -16,7 +16,7 @@ def crop(devices: list[Device], start: int = 0, stop: int = 2**64 - 1) -> list[D
     if stop < min(first_timestamps):
         raise ValueError(f"Stop is before first timestamp: {stop} < {min(first_timestamps)}")
 
-    devices = [
+    return [
         replace(
             d,
             inertial=d.inertial._crop(start, stop),
@@ -40,5 +40,3 @@ def crop(devices: list[Device], start: int = 0, stop: int = 2**64 - 1) -> list[D
         )
         for d in devices
     ]
-
-    return [update_first_and_last_timestamps(d) for d in devices]

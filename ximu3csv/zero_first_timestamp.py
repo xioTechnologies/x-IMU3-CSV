@@ -1,6 +1,6 @@
 from dataclasses import replace
 
-from .device import Device, update_first_and_last_timestamps
+from .device import Device
 
 
 def zero_first_timestamp(devices: list[Device]) -> list[Device]:
@@ -11,7 +11,7 @@ def zero_first_timestamp(devices: list[Device]) -> list[Device]:
 
     offset = -min(first_timestamps)
 
-    devices = [
+    return [
         replace(
             d,
             inertial=d.inertial._offset_timestamp(offset),
@@ -35,5 +35,3 @@ def zero_first_timestamp(devices: list[Device]) -> list[Device]:
         )
         for d in devices
     ]
-
-    return [update_first_and_last_timestamps(d) for d in devices]

@@ -1,5 +1,6 @@
-from dataclasses import dataclass, fields, replace
+from dataclasses import dataclass, fields
 from datetime import datetime
+from functools import cached_property
 from typing import Any
 
 from .data_messages import (
@@ -58,28 +59,17 @@ class Device:
     notification: Notification
     error: Error
 
-    # first and last timestamps from *.csv files
-    first_timestamp: int | None
-    last_timestamp: int | None
+    @cached_property
+    def first_timestamp(self) -> int | None:
+        timestamps = [int(m.timestamp[0]) for m in self._data_messages() if len(m.timestamp) > 0]
 
+        return min(timestamps) if timestamps else None
 
-def update_first_and_last_timestamps(device: Device) -> Device:
-    device = replace(device, first_timestamp=None)
-    device = replace(device, last_timestamp=None)
+    @cached_property
+    def last_timestamp(self) -> int | None:
+        timestamps = [int(m.timestamp[-1]) for m in self._data_messages() if len(m.timestamp) > 0]
 
-    for field in fields(device):
-        attribute = getattr(device, field.name)
+        return max(timestamps) if timestamps else None
 
-        if not isinstance(attribute, DataMessage):
-            continue
-
-        if len(attribute.timestamp) == 0:
-            continue
-
-        if device.first_timestamp is None or attribute.timestamp[0] < device.first_timestamp:
-            device = replace(device, first_timestamp=int(attribute.timestamp[0]))
-
-        if device.last_timestamp is None or attribute.timestamp[-1] > device.last_timestamp:
-            device = replace(device, last_timestamp=int(attribute.timestamp[-1]))
-
-    return device
+    def _data_messages(self) -> list[DataMessage]:
+        return [getattr(self, f.name) for f in fields(self) if isinstance(getattr(self, f.name), DataMessage)]

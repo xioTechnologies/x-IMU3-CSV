@@ -25,7 +25,7 @@ from .data_messages import (
     Sync,
     Temperature,
 )
-from .device import Device, update_first_and_last_timestamps
+from .device import Device
 
 
 def _read_command(directory: Path) -> list[dict[str, Any]]:
@@ -76,7 +76,7 @@ def _read_device(directory: Path, data_message_type: DataMessageType) -> Device:
 
     time = _parse_time(command)
 
-    device = Device(
+    return Device(
         command,
         interface,
         device_name,
@@ -100,11 +100,7 @@ def _read_device(directory: Path, data_message_type: DataMessageType) -> Device:
         _read_data_message(directory, Button, DataMessageType.BUTTON, data_message_type),
         _read_data_message(directory, Notification, DataMessageType.NOTIFICATION, data_message_type),
         _read_data_message(directory, Error, DataMessageType.ERROR, data_message_type),
-        None,
-        None,
     )
-
-    return update_first_and_last_timestamps(device)
 
 
 def read(path: Path | str, data_message_type: DataMessageType = DataMessageType.ALL) -> list[Device]:
