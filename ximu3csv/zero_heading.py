@@ -4,8 +4,8 @@ import numpy as np
 import scipy
 
 from .data_messages import (
-    DataMessage,
     EulerAngles,
+    FloatMessage,
     Quaternion,
     RotationMatrix,
 )
@@ -20,7 +20,7 @@ def _zero_heading_rotations(rotations: scipy.spatial.transform.Rotation, index: 
     return rotations
 
 
-def _zero_heading_message(message: DataMessage, timestamp: int, offset: float) -> DataMessage:
+def _zero_heading_message(message: FloatMessage, timestamp: int, offset: float) -> FloatMessage:
     if len(message.timestamp) == 0:
         return message
 

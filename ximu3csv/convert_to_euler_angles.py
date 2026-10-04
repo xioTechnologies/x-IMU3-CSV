@@ -26,7 +26,6 @@ def _convert_to_euler_angles(device: Device) -> EulerAngles:
                 rotations.as_euler("ZYX", degrees=True)[:, [2, 1, 0]],
             )
         ),
-        _string=np.empty([0, 1]),
     )
 
 

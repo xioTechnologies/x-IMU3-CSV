@@ -3,12 +3,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-import numpy as np
-
 from .data_messages import (
     AhrsStatus,
     Battery,
     Button,
+    DataMessage,
     DataMessageType,
     EarthAcceleration,
     Error,
@@ -63,30 +62,14 @@ def _parse_time(command: list[dict[str, Any]]) -> datetime | None:
     return None
 
 
-def _read_csv(directory: Path, message_type: DataMessageType, filter: tuple[DataMessageType, ...]) -> tuple[np.ndarray, np.ndarray]:
-    csv = np.empty([0, 10])  # 10 is the maximum number of columns expected for any data message
-    string = np.empty([0, 1])
+def _read_data_message(directory: Path, data_message: type[DataMessage], flag: DataMessageType, data_message_type: DataMessageType) -> DataMessage:
+    if flag not in data_message_type:
+        return data_message._empty()
 
-    if message_type not in filter:
-        return csv, string
-
-    file_path = directory / message_type.file_name
-
-    if not file_path.is_file():
-        return csv, string
-
-    try:
-        csv = np.genfromtxt(file_path, delimiter=",", skip_header=1, ndmin=2)
-
-        if message_type in (DataMessageType.AHRS_STATUS, DataMessageType.LTC, DataMessageType.NOTIFICATION, DataMessageType.ERROR):
-            string = np.genfromtxt(file_path, delimiter=",", skip_header=1, usecols=(1,), dtype=None, encoding="utf-8", ndmin=1)  # TODO: support strings containing commas
-    except Exception:
-        print(f"Unable to read file: {file_path}")
-
-    return csv, string
+    return data_message._read(directory)
 
 
-def _read_device(directory: Path, filter: tuple[DataMessageType, ...]) -> Device:
+def _read_device(directory: Path, data_message_type: DataMessageType) -> Device:
     command = _read_command(directory)
 
     interface, device_name, serial_number = _parse_ping(command)
@@ -99,24 +82,24 @@ def _read_device(directory: Path, filter: tuple[DataMessageType, ...]) -> Device
         device_name,
         serial_number,
         time,
-        Inertial(*_read_csv(directory, DataMessageType.INERTIAL, filter)),
-        Magnetometer(*_read_csv(directory, DataMessageType.MAGNETOMETER, filter)),
-        HighGAccelerometer(*_read_csv(directory, DataMessageType.HIGH_G_ACCELEROMETER, filter)),
-        Quaternion(*_read_csv(directory, DataMessageType.QUATERNION, filter)),
-        RotationMatrix(*_read_csv(directory, DataMessageType.ROTATION_MATRIX, filter)),
-        EulerAngles(*_read_csv(directory, DataMessageType.EULER_ANGLES, filter)),
-        LinearAcceleration(*_read_csv(directory, DataMessageType.LINEAR_ACCELERATION, filter)),
-        EarthAcceleration(*_read_csv(directory, DataMessageType.EARTH_ACCELERATION, filter)),
-        AhrsStatus(*_read_csv(directory, DataMessageType.AHRS_STATUS, filter)),
-        SerialAccessory(*_read_csv(directory, DataMessageType.SERIAL_ACCESSORY, filter)),
-        Sync(*_read_csv(directory, DataMessageType.SYNC, filter)),
-        Ltc(*_read_csv(directory, DataMessageType.LTC, filter)),
-        Temperature(*_read_csv(directory, DataMessageType.TEMPERATURE, filter)),
-        Battery(*_read_csv(directory, DataMessageType.BATTERY, filter)),
-        Rssi(*_read_csv(directory, DataMessageType.RSSI, filter)),
-        Button(*_read_csv(directory, DataMessageType.BUTTON, filter)),
-        Notification(*_read_csv(directory, DataMessageType.NOTIFICATION, filter)),
-        Error(*_read_csv(directory, DataMessageType.ERROR, filter)),
+        _read_data_message(directory, Inertial, DataMessageType.INERTIAL, data_message_type),
+        _read_data_message(directory, Magnetometer, DataMessageType.MAGNETOMETER, data_message_type),
+        _read_data_message(directory, HighGAccelerometer, DataMessageType.HIGH_G_ACCELEROMETER, data_message_type),
+        _read_data_message(directory, Quaternion, DataMessageType.QUATERNION, data_message_type),
+        _read_data_message(directory, RotationMatrix, DataMessageType.ROTATION_MATRIX, data_message_type),
+        _read_data_message(directory, EulerAngles, DataMessageType.EULER_ANGLES, data_message_type),
+        _read_data_message(directory, LinearAcceleration, DataMessageType.LINEAR_ACCELERATION, data_message_type),
+        _read_data_message(directory, EarthAcceleration, DataMessageType.EARTH_ACCELERATION, data_message_type),
+        _read_data_message(directory, AhrsStatus, DataMessageType.AHRS_STATUS, data_message_type),
+        _read_data_message(directory, SerialAccessory, DataMessageType.SERIAL_ACCESSORY, data_message_type),
+        _read_data_message(directory, Sync, DataMessageType.SYNC, data_message_type),
+        _read_data_message(directory, Ltc, DataMessageType.LTC, data_message_type),
+        _read_data_message(directory, Temperature, DataMessageType.TEMPERATURE, data_message_type),
+        _read_data_message(directory, Battery, DataMessageType.BATTERY, data_message_type),
+        _read_data_message(directory, Rssi, DataMessageType.RSSI, data_message_type),
+        _read_data_message(directory, Button, DataMessageType.BUTTON, data_message_type),
+        _read_data_message(directory, Notification, DataMessageType.NOTIFICATION, data_message_type),
+        _read_data_message(directory, Error, DataMessageType.ERROR, data_message_type),
         None,
         None,
     )
@@ -124,7 +107,7 @@ def _read_device(directory: Path, filter: tuple[DataMessageType, ...]) -> Device
     return update_first_and_last_timestamps(device)
 
 
-def read(path: Path | str, filter: DataMessageType | tuple[DataMessageType, ...] = tuple(DataMessageType)) -> list[Device]:
+def read(path: Path | str, data_message_type: DataMessageType = DataMessageType.ALL) -> list[Device]:
     path = Path(path).absolute()
 
     if not path.exists():
@@ -133,12 +116,9 @@ def read(path: Path | str, filter: DataMessageType | tuple[DataMessageType, ...]
     if not path.is_dir():
         raise NotADirectoryError(f"Not a directory: {path}")
 
-    if isinstance(filter, DataMessageType):
-        filter = (filter,)
-
     device_directories = [d for d in path.iterdir() if d.is_dir() and not d.name.startswith(".")]
 
     if not device_directories:
         raise FileNotFoundError(f"No device directories found: {path}")
 
-    return [_read_device(d, filter) for d in device_directories]
+    return [_read_device(d, data_message_type) for d in device_directories]

@@ -1,11 +1,13 @@
-from abc import ABC
-from dataclasses import dataclass
-from enum import Enum, auto
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, replace
+from enum import Flag, auto
+from pathlib import Path
+from typing import Self
 
 import numpy as np
 
 
-class DataMessageType(Enum):
+class DataMessageType(Flag):
     INERTIAL = auto()
     MAGNETOMETER = auto()
     HIGH_G_ACCELEROMETER = auto()
@@ -25,61 +27,111 @@ class DataMessageType(Enum):
     NOTIFICATION = auto()
     ERROR = auto()
 
-    @property
-    def file_name(self) -> str:
-        match self:
-            case DataMessageType.INERTIAL:
-                base_name = "Inertial"
-            case DataMessageType.MAGNETOMETER:
-                base_name = "Magnetometer"
-            case DataMessageType.HIGH_G_ACCELEROMETER:
-                base_name = "HighGAccelerometer"
-            case DataMessageType.QUATERNION:
-                base_name = "Quaternion"
-            case DataMessageType.ROTATION_MATRIX:
-                base_name = "RotationMatrix"
-            case DataMessageType.EULER_ANGLES:
-                base_name = "EulerAngles"
-            case DataMessageType.LINEAR_ACCELERATION:
-                base_name = "LinearAcceleration"
-            case DataMessageType.EARTH_ACCELERATION:
-                base_name = "EarthAcceleration"
-            case DataMessageType.AHRS_STATUS:
-                base_name = "AhrsStatus"
-            case DataMessageType.SERIAL_ACCESSORY:
-                base_name = "SerialAccessory"
-            case DataMessageType.SYNC:
-                base_name = "Sync"
-            case DataMessageType.LTC:
-                base_name = "Ltc"
-            case DataMessageType.TEMPERATURE:
-                base_name = "Temperature"
-            case DataMessageType.BATTERY:
-                base_name = "Battery"
-            case DataMessageType.RSSI:
-                base_name = "Rssi"
-            case DataMessageType.BUTTON:
-                base_name = "Button"
-            case DataMessageType.NOTIFICATION:
-                base_name = "Notification"
-            case DataMessageType.ERROR:
-                base_name = "Error"
-
-        return f"{base_name}.csv"
+    ALL = INERTIAL | MAGNETOMETER | HIGH_G_ACCELEROMETER | QUATERNION | ROTATION_MATRIX | EULER_ANGLES | LINEAR_ACCELERATION | EARTH_ACCELERATION | AHRS_STATUS | SERIAL_ACCESSORY | SYNC | LTC | TEMPERATURE | BATTERY | RSSI | BUTTON | NOTIFICATION | ERROR
 
 
 @dataclass(frozen=True)
 class DataMessage(ABC):
+    @property
+    @abstractmethod
+    def timestamp(self) -> np.ndarray:
+        pass
+
+    @classmethod
+    @abstractmethod
+    def _read(cls, device_path: Path) -> Self:
+        pass
+
+    @classmethod
+    @abstractmethod
+    def _empty(cls) -> Self:
+        pass
+
+    @abstractmethod
+    def _offset_timestamp(self, offset: int) -> Self:
+        pass
+
+    @abstractmethod
+    def _crop(self, start: int, stop: int) -> Self:
+        pass
+
+
+@dataclass(frozen=True)
+class FloatMessage(DataMessage):
     _csv: np.ndarray
-    _string: np.ndarray
 
     @property
     def timestamp(self) -> np.ndarray:
         return self._csv[:, 0]
 
+    @classmethod
+    def _read(cls, device_path: Path) -> Self:
+        file_path = device_path / f"{cls.__name__}.csv"
+
+        if not file_path.is_file():
+            return cls._empty()
+
+        try:
+            return cls(np.genfromtxt(file_path, delimiter=",", skip_header=1, ndmin=2))
+        except Exception as exception:
+            exception.add_note(f"Unable to read file: {file_path}")
+            raise
+
+    def _offset_timestamp(self, offset: int) -> Self:
+        return replace(self, _csv=np.column_stack((self._csv[:, 0] + offset, self._csv[:, 1:])))
+
+    def _crop(self, start: int, stop: int) -> Self:
+        mask = (self.timestamp >= start) & (self.timestamp <= stop)
+
+        return replace(self, _csv=self._csv[mask])
+
 
 @dataclass(frozen=True)
-class Inertial(DataMessage):
+class CharArrayMessage(DataMessage):
+    _timestamp: np.ndarray
+    _string: np.ndarray
+
+    @property
+    def timestamp(self) -> np.ndarray:
+        return self._timestamp
+
+    @property
+    def string(self) -> np.ndarray:
+        return self._string
+
+    @classmethod
+    def _read(cls, device_path: Path) -> Self:
+        file_path = device_path / f"{cls.__name__}.csv"
+
+        if not file_path.is_file():
+            return cls._empty()
+
+        try:
+            with file_path.open(encoding="utf-8") as file:
+                next(file)  # skip headings
+
+                rows = [line.rstrip("\n").split(",", 1) for line in file]
+
+            return cls(np.array([float(r[0]) for r in rows]), np.array([r[1] for r in rows], dtype=str))
+        except Exception as exception:
+            exception.add_note(f"Unable to read file: {file_path}")
+            raise
+
+    @classmethod
+    def _empty(cls) -> Self:
+        return cls(np.empty(0), np.empty(0, dtype=str))
+
+    def _offset_timestamp(self, offset: int) -> Self:
+        return replace(self, _timestamp=self._timestamp + offset)
+
+    def _crop(self, start: int, stop: int) -> Self:
+        mask = (self.timestamp >= start) & (self.timestamp <= stop)
+
+        return replace(self, _timestamp=self._timestamp[mask], _string=self._string[mask])
+
+
+@dataclass(frozen=True)
+class Inertial(FloatMessage):
     @property
     def gyroscope_xyz(self) -> np.ndarray:
         return self._csv[:, 1:4]
@@ -112,9 +164,13 @@ class Inertial(DataMessage):
     def accelerometer_z(self) -> np.ndarray:
         return self._csv[:, 6]
 
+    @classmethod
+    def _empty(cls) -> Self:
+        return cls(np.empty([0, 7]))
+
 
 @dataclass(frozen=True)
-class Magnetometer(DataMessage):
+class Magnetometer(FloatMessage):
     @property
     def xyz(self) -> np.ndarray:
         return self._csv[:, 1:4]
@@ -131,9 +187,13 @@ class Magnetometer(DataMessage):
     def z(self) -> np.ndarray:
         return self._csv[:, 3]
 
+    @classmethod
+    def _empty(cls) -> Self:
+        return cls(np.empty([0, 4]))
+
 
 @dataclass(frozen=True)
-class HighGAccelerometer(DataMessage):
+class HighGAccelerometer(FloatMessage):
     @property
     def xyz(self) -> np.ndarray:
         return self._csv[:, 1:4]
@@ -150,9 +210,13 @@ class HighGAccelerometer(DataMessage):
     def z(self) -> np.ndarray:
         return self._csv[:, 3]
 
+    @classmethod
+    def _empty(cls) -> Self:
+        return cls(np.empty([0, 4]))
+
 
 @dataclass(frozen=True)
-class Quaternion(DataMessage):
+class Quaternion(FloatMessage):
     @property
     def wxyz(self) -> np.ndarray:
         return self._csv[:, 1:5]
@@ -173,9 +237,13 @@ class Quaternion(DataMessage):
     def z(self) -> np.ndarray:
         return self._csv[:, 4]
 
+    @classmethod
+    def _empty(cls) -> Self:
+        return cls(np.empty([0, 5]))
+
 
 @dataclass(frozen=True)
-class RotationMatrix(DataMessage):
+class RotationMatrix(FloatMessage):
     @property
     def xx_to_zz(self) -> np.ndarray:
         return self._csv[:, 1:10]
@@ -216,9 +284,13 @@ class RotationMatrix(DataMessage):
     def zz(self) -> np.ndarray:
         return self._csv[:, 9]
 
+    @classmethod
+    def _empty(cls) -> Self:
+        return cls(np.empty([0, 10]))
+
 
 @dataclass(frozen=True)
-class EulerAngles(DataMessage):
+class EulerAngles(FloatMessage):
     @property
     def roll_pitch_yaw(self) -> np.ndarray:
         return self._csv[:, 1:4]
@@ -235,9 +307,13 @@ class EulerAngles(DataMessage):
     def yaw(self) -> np.ndarray:
         return self._csv[:, 3]
 
+    @classmethod
+    def _empty(cls) -> Self:
+        return cls(np.empty([0, 4]))
+
 
 @dataclass(frozen=True)
-class LinearAcceleration(DataMessage):
+class LinearAcceleration(FloatMessage):
     @property
     def xyz(self) -> np.ndarray:
         return self._csv[:, 1:4]
@@ -254,9 +330,13 @@ class LinearAcceleration(DataMessage):
     def z(self) -> np.ndarray:
         return self._csv[:, 3]
 
+    @classmethod
+    def _empty(cls) -> Self:
+        return cls(np.empty([0, 4]))
+
 
 @dataclass(frozen=True)
-class EarthAcceleration(DataMessage):
+class EarthAcceleration(FloatMessage):
     @property
     def xyz(self) -> np.ndarray:
         return self._csv[:, 1:4]
@@ -273,44 +353,50 @@ class EarthAcceleration(DataMessage):
     def z(self) -> np.ndarray:
         return self._csv[:, 3]
 
-
-@dataclass(frozen=True)
-class AhrsStatus(DataMessage):
-    @property
-    def string(self) -> np.ndarray:
-        return self._string
+    @classmethod
+    def _empty(cls) -> Self:
+        return cls(np.empty([0, 4]))
 
 
 @dataclass(frozen=True)
-class SerialAccessory(DataMessage):
-    @property
-    def csv(self) -> np.ndarray:
-        return self._csv[:, 1:]
+class AhrsStatus(CharArrayMessage):
+    pass
 
 
 @dataclass(frozen=True)
-class Sync(DataMessage):
+class SerialAccessory(CharArrayMessage):
+    pass
+
+
+@dataclass(frozen=True)
+class Sync(FloatMessage):
     @property
     def edge(self) -> np.ndarray:
         return self._csv[:, 1]
 
-
-@dataclass(frozen=True)
-class Ltc(DataMessage):
-    @property
-    def string(self) -> np.ndarray:
-        return self._string
+    @classmethod
+    def _empty(cls) -> Self:
+        return cls(np.empty([0, 2]))
 
 
 @dataclass(frozen=True)
-class Temperature(DataMessage):
+class Ltc(CharArrayMessage):
+    pass
+
+
+@dataclass(frozen=True)
+class Temperature(FloatMessage):
     @property
     def temperature(self) -> np.ndarray:
         return self._csv[:, 1]
 
+    @classmethod
+    def _empty(cls) -> Self:
+        return cls(np.empty([0, 2]))
+
 
 @dataclass(frozen=True)
-class Battery(DataMessage):
+class Battery(FloatMessage):
     @property
     def percentage(self) -> np.ndarray:
         return self._csv[:, 1]
@@ -323,9 +409,13 @@ class Battery(DataMessage):
     def charging_status(self) -> np.ndarray:
         return self._csv[:, 3]
 
+    @classmethod
+    def _empty(cls) -> Self:
+        return cls(np.empty([0, 4]))
+
 
 @dataclass(frozen=True)
-class Rssi(DataMessage):
+class Rssi(FloatMessage):
     @property
     def percentage(self) -> np.ndarray:
         return self._csv[:, 1]
@@ -334,23 +424,27 @@ class Rssi(DataMessage):
     def power(self) -> np.ndarray:
         return self._csv[:, 2]
 
+    @classmethod
+    def _empty(cls) -> Self:
+        return cls(np.empty([0, 3]))
+
 
 @dataclass(frozen=True)
-class Button(DataMessage):
+class Button(FloatMessage):
     @property
     def state(self) -> np.ndarray:
         return self._csv[:, 1]
 
-
-@dataclass(frozen=True)
-class Notification(DataMessage):
-    @property
-    def string(self) -> np.ndarray:
-        return self._string
+    @classmethod
+    def _empty(cls) -> Self:
+        return cls(np.empty([0, 2]))
 
 
 @dataclass(frozen=True)
-class Error(DataMessage):
-    @property
-    def string(self) -> np.ndarray:
-        return self._string
+class Notification(CharArrayMessage):
+    pass
+
+
+@dataclass(frozen=True)
+class Error(CharArrayMessage):
+    pass

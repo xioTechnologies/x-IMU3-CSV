@@ -4,8 +4,8 @@ import numpy as np
 import scipy
 
 from .data_messages import (
-    DataMessage,
     EulerAngles,
+    FloatMessage,
     Quaternion,
     RotationMatrix,
 )
@@ -54,7 +54,7 @@ def _slerp_rotation_matrix(time: np.ndarray, rotation_matrix: np.ndarray, new_ti
     return scipy.spatial.transform.Slerp(time, rotations)(new_time).as_matrix().reshape(-1, 9)
 
 
-def _resample(message: DataMessage, timestamp: np.ndarray) -> DataMessage:
+def _resample(message: FloatMessage, timestamp: np.ndarray) -> FloatMessage:
     if len(message.timestamp) == 0:
         return message
 
@@ -116,7 +116,6 @@ def resample(devices: list[Device], sample_rate: float) -> list[Device]:
             euler_angles=_resample(d.euler_angles, timestamp),
             linear_acceleration=_resample(d.linear_acceleration, timestamp),
             earth_acceleration=_resample(d.earth_acceleration, timestamp),
-            serial_accessory=_resample(d.serial_accessory, timestamp),
             sync=_resample(d.sync, timestamp),  # TODO: Do not interpolate edges
             temperature=_resample(d.temperature, timestamp),
             battery=_resample(d.battery, timestamp),

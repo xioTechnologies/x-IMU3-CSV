@@ -72,7 +72,7 @@ print(type(device.ahrs_status.timestamp))
 print(type(device.ahrs_status.string))
 
 print(type(device.serial_accessory.timestamp))
-print(type(device.serial_accessory.csv))
+print(type(device.serial_accessory.string))
 
 print(type(device.sync.timestamp))
 print(type(device.sync.edge))
