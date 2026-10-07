@@ -5,11 +5,14 @@ from .device import Device
 
 
 def crop(devices: list[Device], start: int = 0, stop: int = 2**64 - 1) -> list[Device]:
+    if start > stop:
+        raise ValueError(f"Start is after stop: {start} > {stop}")
+
+    if all(d.first_timestamp is None for d in devices):
+        raise ValueError("No timestamps")
+
     first_timestamps = [d.first_timestamp for d in devices if d.first_timestamp is not None]
     last_timestamps = [d.last_timestamp for d in devices if d.last_timestamp is not None]
-
-    if not first_timestamps or not last_timestamps:
-        return devices
 
     if start > max(last_timestamps):
         raise ValueError(f"Start is after last timestamp: {start} > {max(last_timestamps)}")

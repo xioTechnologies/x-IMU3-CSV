@@ -91,17 +91,20 @@ def _resample(message: FloatMessage, timestamp: np.ndarray) -> FloatMessage:
 
 
 def resample(devices: list[Device], sample_rate: float) -> list[Device]:
+    if sample_rate <= 0:
+        raise ValueError(f"Invalid sample rate: {sample_rate} Hz")
+
+    if all(d.first_timestamp is None for d in devices):
+        raise ValueError("No timestamps")
+
     first_timestamps = [d.first_timestamp for d in devices if d.first_timestamp is not None]
     last_timestamps = [d.last_timestamp for d in devices if d.last_timestamp is not None]
-
-    if not first_timestamps or not last_timestamps:
-        return devices
 
     first_timestamp = max(first_timestamps)
     last_timestamp = min(last_timestamps)
 
-    if first_timestamps == last_timestamps:
-        return devices
+    if first_timestamp >= last_timestamp:
+        raise ValueError("No overlapping timestamps")
 
     timestamp = np.arange(first_timestamp, last_timestamp, 1e6 / sample_rate)
 

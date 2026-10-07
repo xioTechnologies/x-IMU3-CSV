@@ -7,10 +7,10 @@ from .device import Device
 
 
 def zero_timestamps(devices: list[Device]) -> list[Device]:
-    first_timestamps = [d.first_timestamp for d in devices if d.first_timestamp is not None]
+    if all(d.first_timestamp is None for d in devices):
+        raise ValueError("No timestamps")
 
-    if not first_timestamps:
-        return devices
+    first_timestamps = [d.first_timestamp for d in devices if d.first_timestamp is not None]
 
     return offset_timestamps(devices, -min(first_timestamps))
 
