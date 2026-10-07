@@ -12,12 +12,17 @@ from .data_messages import (
 from .device import Device
 
 
-def _zero_heading_rotations(rotations: scipy.spatial.transform.Rotation, index: int, offset: float) -> scipy.spatial.transform.Rotation:
-    angle = offset - rotations[index].as_euler("ZYX", degrees=True)[0]
-
-    rotations[index:] = scipy.spatial.transform.Rotation.from_euler("Z", angle, degrees=True) * rotations[index:]
-
-    return rotations
+def zero_heading(devices: list[Device], timestamp: int = 0, offset: float = 0) -> list[Device]:
+    return [
+        replace(
+            d,
+            quaternion=_zero_heading_message(d.quaternion, timestamp, offset),
+            rotation_matrix=_zero_heading_message(d.rotation_matrix, timestamp, offset),
+            euler_angles=_zero_heading_message(d.euler_angles, timestamp, offset),
+            # TODO: Rotate earth_acceleration
+        )
+        for d in devices
+    ]
 
 
 def _zero_heading_message(message: FloatMessage, timestamp: int, offset: float) -> FloatMessage:
@@ -60,14 +65,9 @@ def _zero_heading_message(message: FloatMessage, timestamp: int, offset: float) 
     return replace(message, _csv=csv)
 
 
-def zero_heading(devices: list[Device], timestamp: int = 0, offset: float = 0) -> list[Device]:
-    return [
-        replace(
-            d,
-            quaternion=_zero_heading_message(d.quaternion, timestamp, offset),
-            rotation_matrix=_zero_heading_message(d.rotation_matrix, timestamp, offset),
-            euler_angles=_zero_heading_message(d.euler_angles, timestamp, offset),
-            # TODO: Rotate earth_acceleration
-        )
-        for d in devices
-    ]
+def _zero_heading_rotations(rotations: scipy.spatial.transform.Rotation, index: int, offset: float) -> scipy.spatial.transform.Rotation:
+    angle = offset - rotations[index].as_euler("ZYX", degrees=True)[0]
+
+    rotations[index:] = scipy.spatial.transform.Rotation.from_euler("Z", angle, degrees=True) * rotations[index:]
+
+    return rotations

@@ -7,6 +7,10 @@ from .data_messages import EulerAngles
 from .device import Device
 
 
+def convert_to_euler_angles(devices: list[Device]) -> list[Device]:
+    return [replace(d, euler_angles=_convert_to_euler_angles(d)) for d in devices]
+
+
 def _convert_to_euler_angles(device: Device) -> EulerAngles:
     if len(device.quaternion.timestamp) > 0:
         timestamp = device.quaternion.timestamp
@@ -27,7 +31,3 @@ def _convert_to_euler_angles(device: Device) -> EulerAngles:
             )
         ),
     )
-
-
-def convert_to_euler_angles(devices: list[Device]) -> list[Device]:
-    return [replace(d, euler_angles=_convert_to_euler_angles(d)) for d in devices]
