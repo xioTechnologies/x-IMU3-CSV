@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from enum import Flag, auto
 from pathlib import Path
 from typing import Self
@@ -47,10 +47,6 @@ class DataMessage(ABC):
     def _empty(cls) -> Self:
         pass
 
-    @abstractmethod
-    def _offset_timestamp(self, offset: int) -> Self:
-        pass
-
 
 @dataclass(frozen=True)
 class FloatMessage(DataMessage):
@@ -72,9 +68,6 @@ class FloatMessage(DataMessage):
         except Exception as exception:
             exception.add_note(f"Unable to read file: {file_path}")
             raise
-
-    def _offset_timestamp(self, offset: int) -> Self:
-        return replace(self, _csv=np.column_stack((self._csv[:, 0] + offset, self._csv[:, 1:])))
 
 
 @dataclass(frozen=True)
@@ -111,9 +104,6 @@ class CharArrayMessage(DataMessage):
     @classmethod
     def _empty(cls) -> Self:
         return cls(np.empty(0), np.empty(0, dtype=str))
-
-    def _offset_timestamp(self, offset: int) -> Self:
-        return replace(self, _timestamp=self._timestamp + offset)
 
 
 @dataclass(frozen=True)
