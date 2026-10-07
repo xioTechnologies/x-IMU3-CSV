@@ -9,6 +9,8 @@ description = "x-IMU3 CSV"
 readme = { text = "See [github](https://github.com/xioTechnologies/x-IMU3-CSV) for documentation and examples.", content-type = "text/markdown" }
 authors = [{ name = "x-io Technologies Limited", email = "info@x-io.co.uk" }]
 license = { file = "LICENSE.md" }
+requires-python = ">=3.11"
+dependencies = ["numpy", "scipy"]
 
 [project.urls]
 Repository = "https://github.com/xioTechnologies/x-IMU3-CSV"
