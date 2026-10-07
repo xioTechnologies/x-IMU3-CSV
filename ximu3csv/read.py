@@ -85,8 +85,12 @@ def _read_command(directory: Path) -> list[dict[str, Any]]:
     if not file_path.is_file():
         return []
 
-    with file_path.open(encoding="utf-8") as file:
-        return json.load(file)
+    try:
+        with file_path.open(encoding="utf-8") as file:
+            return json.load(file)
+    except Exception as exception:
+        exception.add_note(f"Unable to read file: {file_path}")
+        raise
 
 
 def _parse_ping(command: list[dict[str, Any]]) -> tuple[str | None, str | None, str | None]:
