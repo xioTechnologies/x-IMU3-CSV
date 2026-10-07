@@ -4,6 +4,7 @@ import numpy as np
 import scipy
 
 from .data_messages import (
+    EarthAcceleration,
     EulerAngles,
     FloatMessage,
     Quaternion,
@@ -19,7 +20,7 @@ def zero_heading(devices: list[Device], timestamp: int = 0, offset: float = 0) -
             quaternion=_zero_heading_message(d.quaternion, timestamp, offset),
             rotation_matrix=_zero_heading_message(d.rotation_matrix, timestamp, offset),
             euler_angles=_zero_heading_message(d.euler_angles, timestamp, offset),
-            # TODO: Rotate earth_acceleration
+            earth_acceleration=_zero_heading_message(d.earth_acceleration, timestamp, offset),
         )
         for d in devices
     ]
@@ -61,6 +62,8 @@ def _zero_heading_message(message: FloatMessage, timestamp: int, offset: float) 
                 _zero_heading_rotations(rotations, index, offset).as_matrix().reshape(-1, 9),
             )
         )
+    elif isinstance(message, EarthAcceleration):
+        raise NotImplementedError("Zero heading of earth acceleration")  # TODO
 
     return replace(message, _csv=csv)
 
