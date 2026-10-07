@@ -13,20 +13,24 @@ from .data_messages import (
 from .device import Device
 
 
-def zero_heading(devices: list[Device], timestamp: int = 0, offset: float = 0) -> list[Device]:
+def zero_heading(devices: list[Device], timestamp: int = 0) -> list[Device]:
+    return set_heading(devices, 0, timestamp)
+
+
+def set_heading(devices: list[Device], heading: float, timestamp: int = 0) -> list[Device]:
     return [
         replace(
             d,
-            quaternion=_zero_heading_message(d.quaternion, timestamp, offset),
-            rotation_matrix=_zero_heading_message(d.rotation_matrix, timestamp, offset),
-            euler_angles=_zero_heading_message(d.euler_angles, timestamp, offset),
-            earth_acceleration=_zero_heading_message(d.earth_acceleration, timestamp, offset),
+            quaternion=_set_heading_message(d.quaternion, heading, timestamp),
+            rotation_matrix=_set_heading_message(d.rotation_matrix, heading, timestamp),
+            euler_angles=_set_heading_message(d.euler_angles, heading, timestamp),
+            earth_acceleration=_set_heading_message(d.earth_acceleration, heading, timestamp),
         )
         for d in devices
     ]
 
 
-def _zero_heading_message(message: FloatMessage, timestamp: int, offset: float) -> FloatMessage:
+def _set_heading_message(message: FloatMessage, heading: float, timestamp: int) -> FloatMessage:
     if len(message.timestamp) == 0:
         return message
 
@@ -41,7 +45,7 @@ def _zero_heading_message(message: FloatMessage, timestamp: int, offset: float) 
         csv = np.column_stack(
             (
                 message.timestamp,
-                _zero_heading_rotations(rotations, index, offset).as_quat()[:, [3, 0, 1, 2]],
+                _set_heading_rotations(rotations, heading, index).as_quat()[:, [3, 0, 1, 2]],
             )
         )
     elif isinstance(message, EulerAngles):
@@ -50,7 +54,7 @@ def _zero_heading_message(message: FloatMessage, timestamp: int, offset: float) 
         csv = np.column_stack(
             (
                 message.timestamp,
-                _zero_heading_rotations(rotations, index, offset).as_euler("ZYX", degrees=True)[:, [2, 1, 0]],
+                _set_heading_rotations(rotations, heading, index).as_euler("ZYX", degrees=True)[:, [2, 1, 0]],
             )
         )
     elif isinstance(message, RotationMatrix):
@@ -59,17 +63,17 @@ def _zero_heading_message(message: FloatMessage, timestamp: int, offset: float) 
         csv = np.column_stack(
             (
                 message.timestamp,
-                _zero_heading_rotations(rotations, index, offset).as_matrix().reshape(-1, 9),
+                _set_heading_rotations(rotations, heading, index).as_matrix().reshape(-1, 9),
             )
         )
     elif isinstance(message, EarthAcceleration):
-        raise NotImplementedError("Zero heading of earth acceleration")  # TODO
+        raise NotImplementedError("Set heading of earth acceleration")  # TODO
 
     return replace(message, _csv=csv)
 
 
-def _zero_heading_rotations(rotations: scipy.spatial.transform.Rotation, index: int, offset: float) -> scipy.spatial.transform.Rotation:
-    angle = offset - rotations[index].as_euler("ZYX", degrees=True)[0]
+def _set_heading_rotations(rotations: scipy.spatial.transform.Rotation, heading: float, index: int) -> scipy.spatial.transform.Rotation:
+    angle = heading - rotations[index].as_euler("ZYX", degrees=True)[0]
 
     rotations[index:] = scipy.spatial.transform.Rotation.from_euler("Z", angle, degrees=True) * rotations[index:]
 

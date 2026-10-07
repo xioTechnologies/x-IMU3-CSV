@@ -5,4 +5,4 @@ from .device import Device
 from .offset_timestamps import offset_timestamps, zero_timestamps
 from .read import read
 from .resample import resample
-from .zero_heading import zero_heading
+from .set_heading import set_heading, zero_heading
