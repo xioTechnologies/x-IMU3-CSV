@@ -1,5 +1,6 @@
 from dataclasses import replace
 
+from .data_messages import CharArrayMessage, DataMessage, FloatMessage
 from .device import Device
 
 
@@ -19,24 +20,34 @@ def crop(devices: list[Device], start: int = 0, stop: int = 2**64 - 1) -> list[D
     return [
         replace(
             d,
-            inertial=d.inertial._crop(start, stop),
-            magnetometer=d.magnetometer._crop(start, stop),
-            high_g_accelerometer=d.high_g_accelerometer._crop(start, stop),
-            quaternion=d.quaternion._crop(start, stop),
-            rotation_matrix=d.rotation_matrix._crop(start, stop),
-            euler_angles=d.euler_angles._crop(start, stop),
-            linear_acceleration=d.linear_acceleration._crop(start, stop),
-            earth_acceleration=d.earth_acceleration._crop(start, stop),
-            ahrs_status=d.ahrs_status._crop(start, stop),
-            serial_accessory=d.serial_accessory._crop(start, stop),
-            sync=d.sync._crop(start, stop),
-            ltc=d.ltc._crop(start, stop),
-            temperature=d.temperature._crop(start, stop),
-            battery=d.battery._crop(start, stop),
-            rssi=d.rssi._crop(start, stop),
-            button=d.button._crop(start, stop),
-            notification=d.notification._crop(start, stop),
-            error=d.error._crop(start, stop),
+            inertial=_crop(d.inertial, start, stop),
+            magnetometer=_crop(d.magnetometer, start, stop),
+            high_g_accelerometer=_crop(d.high_g_accelerometer, start, stop),
+            quaternion=_crop(d.quaternion, start, stop),
+            rotation_matrix=_crop(d.rotation_matrix, start, stop),
+            euler_angles=_crop(d.euler_angles, start, stop),
+            linear_acceleration=_crop(d.linear_acceleration, start, stop),
+            earth_acceleration=_crop(d.earth_acceleration, start, stop),
+            ahrs_status=_crop(d.ahrs_status, start, stop),
+            serial_accessory=_crop(d.serial_accessory, start, stop),
+            sync=_crop(d.sync, start, stop),
+            ltc=_crop(d.ltc, start, stop),
+            temperature=_crop(d.temperature, start, stop),
+            battery=_crop(d.battery, start, stop),
+            rssi=_crop(d.rssi, start, stop),
+            button=_crop(d.button, start, stop),
+            notification=_crop(d.notification, start, stop),
+            error=_crop(d.error, start, stop),
         )
         for d in devices
     ]
+
+
+def _crop(message: DataMessage, start: int, stop: int) -> DataMessage:
+    mask = (message.timestamp >= start) & (message.timestamp <= stop)
+
+    match message:
+        case FloatMessage():
+            return replace(message, _csv=message._csv[mask])
+        case CharArrayMessage():
+            return replace(message, _timestamp=message._timestamp[mask], _string=message._string[mask])

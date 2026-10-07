@@ -51,10 +51,6 @@ class DataMessage(ABC):
     def _offset_timestamp(self, offset: int) -> Self:
         pass
 
-    @abstractmethod
-    def _crop(self, start: int, stop: int) -> Self:
-        pass
-
 
 @dataclass(frozen=True)
 class FloatMessage(DataMessage):
@@ -79,11 +75,6 @@ class FloatMessage(DataMessage):
 
     def _offset_timestamp(self, offset: int) -> Self:
         return replace(self, _csv=np.column_stack((self._csv[:, 0] + offset, self._csv[:, 1:])))
-
-    def _crop(self, start: int, stop: int) -> Self:
-        mask = (self.timestamp >= start) & (self.timestamp <= stop)
-
-        return replace(self, _csv=self._csv[mask])
 
 
 @dataclass(frozen=True)
@@ -123,11 +114,6 @@ class CharArrayMessage(DataMessage):
 
     def _offset_timestamp(self, offset: int) -> Self:
         return replace(self, _timestamp=self._timestamp + offset)
-
-    def _crop(self, start: int, stop: int) -> Self:
-        mask = (self.timestamp >= start) & (self.timestamp <= stop)
-
-        return replace(self, _timestamp=self._timestamp[mask], _string=self._string[mask])
 
 
 @dataclass(frozen=True)
