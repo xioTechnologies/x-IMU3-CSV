@@ -26,7 +26,7 @@ def resample(devices: list[Device], sample_rate: float) -> list[Device]:
     last_timestamp = min(last_timestamps)
 
     if first_timestamp >= last_timestamp:
-        raise ValueError("No overlapping timestamps")
+        raise ValueError(f"No overlapping timestamps: {first_timestamp} >= {last_timestamp}")
 
     timestamp = np.arange(first_timestamp, last_timestamp, 1e6 / sample_rate)
 

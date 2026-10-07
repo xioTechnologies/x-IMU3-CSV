@@ -18,6 +18,11 @@ def zero_heading(devices: list[Device], timestamp: int = 0) -> list[Device]:
 
 
 def set_heading(devices: list[Device], heading: float, timestamp: int = 0) -> list[Device]:
+    last_timestamp = max((d.last_timestamp for d in devices if d.last_timestamp is not None), default=None)
+
+    if (last_timestamp is not None) and (timestamp > last_timestamp):
+        raise ValueError(f"Timestamp is after last timestamp: {timestamp} > {last_timestamp}")
+
     return [
         replace(
             d,
