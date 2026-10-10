@@ -5,7 +5,7 @@ from functools import cached_property
 from typing import Self, overload
 
 from .connection import Connection, max_last_timestamp, min_first_timestamp
-from .post_processing import calculate_euler_angles, crop, offset_timestamps, resample, set_heading
+from .post_processing import calculate_euler_angles, calculate_quaternion, calculate_rotation_matrix, crop, offset_timestamps, resample, set_heading
 
 
 @dataclass(frozen=True)
@@ -64,6 +64,12 @@ class LoggedData:
 
     def zero_heading(self, timestamp: float | None = None) -> Self:
         return replace(self, _connections=set_heading.zero_heading(self._connections, timestamp))
+
+    def calculate_quaternion(self) -> Self:
+        return replace(self, _connections=calculate_quaternion.calculate_quaternion(self._connections))
+
+    def calculate_rotation_matrix(self) -> Self:
+        return replace(self, _connections=calculate_rotation_matrix.calculate_rotation_matrix(self._connections))
 
     def calculate_euler_angles(self) -> Self:
         return replace(self, _connections=calculate_euler_angles.calculate_euler_angles(self._connections))
