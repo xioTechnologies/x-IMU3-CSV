@@ -60,14 +60,14 @@ class Device:
     error: Error
 
     @cached_property
-    def first_timestamp(self) -> int | None:
-        timestamps = [int(m.timestamp[0]) for m in self._data_messages() if len(m.timestamp) > 0]
+    def first_timestamp(self) -> float | None:
+        timestamps = [m.timestamp[0] for m in self._data_messages() if len(m.timestamp) > 0]
 
         return min(timestamps) if timestamps else None
 
     @cached_property
-    def last_timestamp(self) -> int | None:
-        timestamps = [int(m.timestamp[-1]) for m in self._data_messages() if len(m.timestamp) > 0]
+    def last_timestamp(self) -> float | None:
+        timestamps = [m.timestamp[-1] for m in self._data_messages() if len(m.timestamp) > 0]
 
         return max(timestamps) if timestamps else None
 

@@ -13,15 +13,16 @@ from .data_messages import (
 from .device import Device
 
 
-def zero_heading(devices: list[Device], timestamp: int = 0) -> list[Device]:
+def zero_heading(devices: list[Device], timestamp: float | None = None) -> list[Device]:
     return set_heading(devices, 0, timestamp)
 
 
-def set_heading(devices: list[Device], heading: float, timestamp: int = 0) -> list[Device]:
-    last_timestamp = max((d.last_timestamp for d in devices if d.last_timestamp is not None), default=None)
+def set_heading(devices: list[Device], heading: float, timestamp: float | None = None) -> list[Device]:
+    if timestamp is not None:
+        last_timestamp = max((d.last_timestamp for d in devices if d.last_timestamp is not None), default=None)
 
-    if (last_timestamp is not None) and (timestamp > last_timestamp):
-        raise ValueError(f"Timestamp is after last timestamp: {timestamp} > {last_timestamp}")
+        if (last_timestamp is not None) and (timestamp > last_timestamp):
+            raise ValueError(f"Timestamp is after last timestamp: {timestamp} > {last_timestamp}")
 
     return [
         replace(
@@ -35,14 +36,14 @@ def set_heading(devices: list[Device], heading: float, timestamp: int = 0) -> li
     ]
 
 
-def _set_heading_message(message: FloatMessage, heading: float, timestamp: int) -> FloatMessage:
+def _set_heading_message(message: FloatMessage, heading: float, timestamp: float | None) -> FloatMessage:
     if len(message.timestamp) == 0:
         return message
 
-    if timestamp > message.timestamp[-1]:
+    if (timestamp is not None) and (timestamp > message.timestamp[-1]):
         return message
 
-    index = np.argmax(message.timestamp >= timestamp)
+    index = 0 if timestamp is None else np.argmax(message.timestamp >= timestamp)
 
     if isinstance(message, Quaternion):
         rotations = scipy.spatial.transform.Rotation.from_quat(message.wxyz[:, [1, 2, 3, 0]])

@@ -1,11 +1,16 @@
 from dataclasses import replace
 
+import numpy as np
+
 from .data_messages import CharArrayMessage, DataMessage, FloatMessage
 from .device import Device
 
 
-def crop(devices: list[Device], start: int = 0, stop: int = 2**64 - 1) -> list[Device]:
-    if start > stop:
+def crop(devices: list[Device], start: float | None = None, stop: float | None = None) -> list[Device]:
+    if (start is None) and (stop is None):
+        raise ValueError("No start or stop")
+
+    if (start is not None) and (stop is not None) and (start > stop):
         raise ValueError(f"Start is after stop: {start} > {stop}")
 
     if all(d.first_timestamp is None for d in devices):
@@ -14,10 +19,10 @@ def crop(devices: list[Device], start: int = 0, stop: int = 2**64 - 1) -> list[D
     first_timestamps = [d.first_timestamp for d in devices if d.first_timestamp is not None]
     last_timestamps = [d.last_timestamp for d in devices if d.last_timestamp is not None]
 
-    if start > max(last_timestamps):
+    if (start is not None) and (start > max(last_timestamps)):
         raise ValueError(f"Start is after last timestamp: {start} > {max(last_timestamps)}")
 
-    if stop < min(first_timestamps):
+    if (stop is not None) and (stop < min(first_timestamps)):
         raise ValueError(f"Stop is before first timestamp: {stop} < {min(first_timestamps)}")
 
     return [
@@ -46,8 +51,14 @@ def crop(devices: list[Device], start: int = 0, stop: int = 2**64 - 1) -> list[D
     ]
 
 
-def _crop(message: DataMessage, start: int, stop: int) -> DataMessage:
-    mask = (message.timestamp >= start) & (message.timestamp <= stop)
+def _crop(message: DataMessage, start: float | None, stop: float | None) -> DataMessage:
+    mask = np.full(len(message.timestamp), True)
+
+    if start is not None:
+        mask &= message.timestamp >= start
+
+    if stop is not None:
+        mask &= message.timestamp <= stop
 
     match message:
         case FloatMessage():

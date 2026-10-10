@@ -15,7 +15,7 @@ def zero_timestamps(devices: list[Device]) -> list[Device]:
     return offset_timestamps(devices, -min(first_timestamps))
 
 
-def offset_timestamps(devices: list[Device], offset: int) -> list[Device]:
+def offset_timestamps(devices: list[Device], offset: float) -> list[Device]:
     return [
         replace(
             d,
@@ -42,7 +42,7 @@ def offset_timestamps(devices: list[Device], offset: int) -> list[Device]:
     ]
 
 
-def _offset_timestamps(message: DataMessage, offset: int) -> DataMessage:
+def _offset_timestamps(message: DataMessage, offset: float) -> DataMessage:
     match message:
         case FloatMessage():
             return replace(message, _csv=np.column_stack((message._csv[:, 0] + offset, message._csv[:, 1:])))
