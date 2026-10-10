@@ -39,7 +39,7 @@ class DataMessage(ABC):
 
     @classmethod
     @abstractmethod
-    def _read(cls, device_path: Path) -> Self:
+    def _read(cls, connection_path: Path) -> Self:
         pass
 
     @classmethod
@@ -57,8 +57,8 @@ class FloatMessage(DataMessage):
         return self._csv[:, 0]
 
     @classmethod
-    def _read(cls, device_path: Path) -> Self:
-        file_path = device_path / f"{cls.__name__}.csv"
+    def _read(cls, connection_path: Path) -> Self:
+        file_path = connection_path / f"{cls.__name__}.csv"
 
         if not file_path.is_file():
             return cls._empty()
@@ -84,8 +84,8 @@ class CharArrayMessage(DataMessage):
         return self._string
 
     @classmethod
-    def _read(cls, device_path: Path) -> Self:
-        file_path = device_path / f"{cls.__name__}.csv"
+    def _read(cls, connection_path: Path) -> Self:
+        file_path = connection_path / f"{cls.__name__}.csv"
 
         if not file_path.is_file():
             return cls._empty()

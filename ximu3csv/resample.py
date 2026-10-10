@@ -3,24 +3,24 @@ from dataclasses import replace
 import numpy as np
 import scipy
 
+from .connection import Connection
 from .data_messages import (
     EulerAngles,
     FloatMessage,
     Quaternion,
     RotationMatrix,
 )
-from .device import Device
 
 
-def resample(devices: list[Device], sample_rate: float) -> list[Device]:
+def resample(connections: list[Connection], sample_rate: float) -> list[Connection]:
     if sample_rate <= 0:
         raise ValueError(f"Invalid sample rate: {sample_rate}")
 
-    if all(d.first_timestamp is None for d in devices):
+    if all(c.first_timestamp is None for c in connections):
         raise ValueError("No timestamps")
 
-    first_timestamps = [d.first_timestamp for d in devices if d.first_timestamp is not None]
-    last_timestamps = [d.last_timestamp for d in devices if d.last_timestamp is not None]
+    first_timestamps = [c.first_timestamp for c in connections if c.first_timestamp is not None]
+    last_timestamps = [c.last_timestamp for c in connections if c.last_timestamp is not None]
 
     first_timestamp = max(first_timestamps)
     last_timestamp = min(last_timestamps)
@@ -32,22 +32,22 @@ def resample(devices: list[Device], sample_rate: float) -> list[Device]:
 
     return [
         replace(
-            d,
-            inertial=_resample(d.inertial, timestamp),
-            magnetometer=_resample(d.magnetometer, timestamp),
-            high_g_accelerometer=_resample(d.high_g_accelerometer, timestamp),
-            quaternion=_resample(d.quaternion, timestamp),
-            rotation_matrix=_resample(d.rotation_matrix, timestamp),
-            euler_angles=_resample(d.euler_angles, timestamp),
-            linear_acceleration=_resample(d.linear_acceleration, timestamp),
-            earth_acceleration=_resample(d.earth_acceleration, timestamp),
-            sync=_resample(d.sync, timestamp),  # TODO: Do not interpolate edges
-            temperature=_resample(d.temperature, timestamp),
-            battery=_resample(d.battery, timestamp),
-            rssi=_resample(d.rssi, timestamp),
-            button=_resample(d.button, timestamp),  # TODO: Do not interpolate edges
+            c,
+            inertial=_resample(c.inertial, timestamp),
+            magnetometer=_resample(c.magnetometer, timestamp),
+            high_g_accelerometer=_resample(c.high_g_accelerometer, timestamp),
+            quaternion=_resample(c.quaternion, timestamp),
+            rotation_matrix=_resample(c.rotation_matrix, timestamp),
+            euler_angles=_resample(c.euler_angles, timestamp),
+            linear_acceleration=_resample(c.linear_acceleration, timestamp),
+            earth_acceleration=_resample(c.earth_acceleration, timestamp),
+            sync=_resample(c.sync, timestamp),  # TODO: Do not interpolate edges
+            temperature=_resample(c.temperature, timestamp),
+            battery=_resample(c.battery, timestamp),
+            rssi=_resample(c.rssi, timestamp),
+            button=_resample(c.button, timestamp),  # TODO: Do not interpolate edges
         )
-        for d in devices
+        for c in connections
     ]
 
 

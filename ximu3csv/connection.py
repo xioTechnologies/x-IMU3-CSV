@@ -27,7 +27,7 @@ from .data_messages import (
 
 
 @dataclass(frozen=True)
-class Device:
+class Connection:
     # Command.json
     command: list[dict[str, Any]]
 

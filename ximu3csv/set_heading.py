@@ -4,37 +4,37 @@ from dataclasses import replace
 import numpy as np
 import scipy
 
+from .connection import Connection
 from .data_messages import (
     EulerAngles,
     FloatMessage,
     Quaternion,
     RotationMatrix,
 )
-from .device import Device
 
 
-def zero_heading(devices: list[Device], timestamp: float | None = None) -> list[Device]:
-    return set_heading(devices, 0, timestamp)
+def zero_heading(connections: list[Connection], timestamp: float | None = None) -> list[Connection]:
+    return set_heading(connections, 0, timestamp)
 
 
-def set_heading(devices: list[Device], heading: float, timestamp: float | None = None) -> list[Device]:
+def set_heading(connections: list[Connection], heading: float, timestamp: float | None = None) -> list[Connection]:
     if timestamp is not None:
-        last_timestamp = max((d.last_timestamp for d in devices if d.last_timestamp is not None), default=None)
+        last_timestamp = max((c.last_timestamp for c in connections if c.last_timestamp is not None), default=None)
 
         if (last_timestamp is not None) and (timestamp > last_timestamp):
             raise ValueError(f"Timestamp is after last timestamp: {timestamp} > {last_timestamp}")
 
-    if any(len(d.earth_acceleration.timestamp) > 0 for d in devices):
+    if any(len(c.earth_acceleration.timestamp) > 0 for c in connections):
         warnings.warn("Heading not set for earth acceleration")
 
     return [
         replace(
-            d,
-            quaternion=_set_heading_message(d.quaternion, heading, timestamp),
-            rotation_matrix=_set_heading_message(d.rotation_matrix, heading, timestamp),
-            euler_angles=_set_heading_message(d.euler_angles, heading, timestamp),
+            c,
+            quaternion=_set_heading_message(c.quaternion, heading, timestamp),
+            rotation_matrix=_set_heading_message(c.rotation_matrix, heading, timestamp),
+            euler_angles=_set_heading_message(c.euler_angles, heading, timestamp),
         )
-        for d in devices
+        for c in connections
     ]
 
 

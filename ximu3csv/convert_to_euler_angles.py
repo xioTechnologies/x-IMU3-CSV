@@ -3,25 +3,25 @@ from dataclasses import replace
 import numpy as np
 import scipy
 
+from .connection import Connection
 from .data_messages import EulerAngles
-from .device import Device
 
 
-def convert_to_euler_angles(devices: list[Device]) -> list[Device]:
-    return [replace(d, euler_angles=_convert_to_euler_angles(d)) for d in devices]
+def convert_to_euler_angles(connections: list[Connection]) -> list[Connection]:
+    return [replace(c, euler_angles=_convert_to_euler_angles(c)) for c in connections]
 
 
-def _convert_to_euler_angles(device: Device) -> EulerAngles:
-    if len(device.quaternion.timestamp) > 0:
-        timestamp = device.quaternion.timestamp
-        rotations = scipy.spatial.transform.Rotation.from_quat(device.quaternion.wxyz[:, [1, 2, 3, 0]])
+def _convert_to_euler_angles(connection: Connection) -> EulerAngles:
+    if len(connection.quaternion.timestamp) > 0:
+        timestamp = connection.quaternion.timestamp
+        rotations = scipy.spatial.transform.Rotation.from_quat(connection.quaternion.wxyz[:, [1, 2, 3, 0]])
 
-    elif len(device.rotation_matrix.timestamp) > 0:
-        timestamp = device.rotation_matrix.timestamp
-        rotations = scipy.spatial.transform.Rotation.from_matrix(device.rotation_matrix.xx_to_zz.reshape(-1, 3, 3))
+    elif len(connection.rotation_matrix.timestamp) > 0:
+        timestamp = connection.rotation_matrix.timestamp
+        rotations = scipy.spatial.transform.Rotation.from_matrix(connection.rotation_matrix.xx_to_zz.reshape(-1, 3, 3))
 
     else:
-        return device.euler_angles
+        return connection.euler_angles
 
     return EulerAngles(
         _csv=np.column_stack(

@@ -3,6 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from .connection import Connection
 from .data_messages import (
     AhrsStatus,
     Battery,
@@ -25,10 +26,9 @@ from .data_messages import (
     Sync,
     Temperature,
 )
-from .device import Device
 
 
-def read(path: Path | str, data_message_type: DataMessageType = DataMessageType.ALL) -> list[Device]:
+def read(path: Path | str, data_message_type: DataMessageType = DataMessageType.ALL) -> list[Connection]:
     path = Path(path).absolute()
 
     if not path.exists():
@@ -37,22 +37,22 @@ def read(path: Path | str, data_message_type: DataMessageType = DataMessageType.
     if not path.is_dir():
         raise NotADirectoryError(f"Not a directory: {path}")
 
-    device_directories = [d for d in path.iterdir() if d.is_dir() and not d.name.startswith(".")]
+    connection_directories = [d for d in path.iterdir() if d.is_dir() and not d.name.startswith(".")]
 
-    if not device_directories:
-        raise FileNotFoundError(f"No device directories found: {path}")
+    if not connection_directories:
+        raise FileNotFoundError(f"No connection directories found: {path}")
 
-    return [_read_device(d, data_message_type) for d in device_directories]
+    return [_read_connection(d, data_message_type) for d in connection_directories]
 
 
-def _read_device(directory: Path, data_message_type: DataMessageType) -> Device:
+def _read_connection(directory: Path, data_message_type: DataMessageType) -> Connection:
     command = _read_command(directory)
 
     interface, device_name, serial_number = _parse_ping(command)
 
     time = _parse_time(command)
 
-    return Device(
+    return Connection(
         command,
         interface,
         device_name,
