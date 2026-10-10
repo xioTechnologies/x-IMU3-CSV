@@ -4,8 +4,8 @@ from dataclasses import replace
 import numpy as np
 import scipy
 
-from .connection import Connection
-from .data_messages import (
+from ..connection import Connection
+from ..data_messages import (
     EulerAngles,
     FloatMessage,
     Quaternion,

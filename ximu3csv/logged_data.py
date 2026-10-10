@@ -4,8 +4,8 @@ from datetime import datetime
 from functools import cached_property
 from typing import Self, overload
 
-from . import convert_to_euler_angles, crop, offset_timestamps, resample, set_heading
 from .connection import Connection, max_last_timestamp, min_first_timestamp
+from .post_processing import convert_to_euler_angles, crop, offset_timestamps, resample, set_heading
 
 
 @dataclass(frozen=True)

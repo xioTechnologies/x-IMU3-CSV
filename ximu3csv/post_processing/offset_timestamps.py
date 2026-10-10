@@ -3,8 +3,8 @@ from dataclasses import replace
 
 import numpy as np
 
-from .connection import Connection, min_first_timestamp
-from .data_messages import CharArrayMessage, DataMessage, FloatMessage
+from ..connection import Connection, min_first_timestamp
+from ..data_messages import CharArrayMessage, DataMessage, FloatMessage
 
 
 def offset_timestamps(connections: Sequence[Connection], offset: float) -> tuple[Connection, ...]:

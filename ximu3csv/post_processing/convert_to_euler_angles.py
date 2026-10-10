@@ -4,8 +4,8 @@ from dataclasses import replace
 import numpy as np
 import scipy
 
-from .connection import Connection
-from .data_messages import EulerAngles
+from ..connection import Connection
+from ..data_messages import EulerAngles
 
 
 def convert_to_euler_angles(connections: Sequence[Connection]) -> tuple[Connection, ...]:

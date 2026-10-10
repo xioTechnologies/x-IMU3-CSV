@@ -3,8 +3,8 @@ from dataclasses import replace
 
 import numpy as np
 
-from .connection import Connection, max_last_timestamp, min_first_timestamp
-from .data_messages import CharArrayMessage, DataMessage, FloatMessage
+from ..connection import Connection, max_last_timestamp, min_first_timestamp
+from ..data_messages import CharArrayMessage, DataMessage, FloatMessage
 
 
 def crop(connections: Sequence[Connection], start: float | None, stop: float | None) -> tuple[Connection, ...]:
