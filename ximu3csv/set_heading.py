@@ -1,40 +1,41 @@
 import warnings
+from collections.abc import Sequence
 from dataclasses import replace
 
 import numpy as np
 import scipy
 
+from .connection import Connection, max_last_timestamp
 from .data_messages import (
     EulerAngles,
     FloatMessage,
     Quaternion,
     RotationMatrix,
 )
-from .logged_data import LoggedData
 
 
-def zero_heading(data: LoggedData, timestamp: float | None = None) -> LoggedData:
-    return set_heading(data, 0, timestamp)
+def zero_heading(connections: Sequence[Connection], timestamp: float | None) -> tuple[Connection, ...]:
+    return set_heading(connections, 0, timestamp)
 
 
-def set_heading(data: LoggedData, heading: float, timestamp: float | None = None) -> LoggedData:
-    if (timestamp is not None) and (data.last_timestamp is not None) and (timestamp > data.last_timestamp):
-        raise ValueError(f"Timestamp is after last timestamp: {timestamp} > {data.last_timestamp}")
+def set_heading(connections: Sequence[Connection], heading: float, timestamp: float | None) -> tuple[Connection, ...]:
+    last_timestamp = max_last_timestamp(connections)
 
-    if any(len(c.earth_acceleration.timestamp) > 0 for c in data):
+    if (timestamp is not None) and (last_timestamp is not None) and (timestamp > last_timestamp):
+        raise ValueError(f"Timestamp is after last timestamp: {timestamp} > {last_timestamp}")
+
+    if any(len(c.earth_acceleration.timestamp) > 0 for c in connections):
         warnings.warn("Heading not set for earth acceleration")
 
-    connections = tuple(
+    return tuple(
         replace(
             c,
             quaternion=_set_heading_message(c.quaternion, heading, timestamp),
             rotation_matrix=_set_heading_message(c.rotation_matrix, heading, timestamp),
             euler_angles=_set_heading_message(c.euler_angles, heading, timestamp),
         )
-        for c in data
+        for c in connections
     )
-
-    return replace(data, _connections=connections)
 
 
 def _set_heading_message(message: FloatMessage, heading: float, timestamp: float | None) -> FloatMessage:

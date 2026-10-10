@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from dataclasses import dataclass, fields
 from datetime import datetime
 from functools import cached_property
@@ -73,3 +74,15 @@ class Connection:
 
     def _data_messages(self) -> list[DataMessage]:
         return [getattr(self, f.name) for f in fields(self) if isinstance(getattr(self, f.name), DataMessage)]
+
+
+def min_first_timestamp(connections: Sequence[Connection]) -> float | None:
+    timestamps = [c.first_timestamp for c in connections if c.first_timestamp is not None]
+
+    return min(timestamps) if timestamps else None
+
+
+def max_last_timestamp(connections: Sequence[Connection]) -> float | None:
+    timestamps = [c.last_timestamp for c in connections if c.last_timestamp is not None]
+
+    return max(timestamps) if timestamps else None

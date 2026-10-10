@@ -4,7 +4,8 @@ from datetime import datetime
 from functools import cached_property
 from typing import Self, overload
 
-from .connection import Connection
+from . import convert_to_euler_angles, crop, offset_timestamps, resample, set_heading
+from .connection import Connection, max_last_timestamp, min_first_timestamp
 
 
 @dataclass(frozen=True)
@@ -40,15 +41,32 @@ class LoggedData:
 
     @cached_property
     def first_timestamp(self) -> float | None:
-        timestamps = [c.first_timestamp for c in self._connections if c.first_timestamp is not None]
-
-        return min(timestamps) if timestamps else None
+        return min_first_timestamp(self._connections)
 
     @cached_property
     def last_timestamp(self) -> float | None:
-        timestamps = [c.last_timestamp for c in self._connections if c.last_timestamp is not None]
+        return max_last_timestamp(self._connections)
 
-        return max(timestamps) if timestamps else None
+    def crop(self, start: float | None = None, stop: float | None = None) -> Self:
+        return replace(self, _connections=crop.crop(self._connections, start, stop))
+
+    def zero_timestamps(self) -> Self:
+        return replace(self, _connections=offset_timestamps.zero_timestamps(self._connections))
+
+    def offset_timestamps(self, offset: float) -> Self:
+        return replace(self, _connections=offset_timestamps.offset_timestamps(self._connections, offset))
+
+    def resample(self, sample_rate: float) -> Self:
+        return replace(self, _connections=resample.resample(self._connections, sample_rate))
+
+    def zero_heading(self, timestamp: float | None = None) -> Self:
+        return replace(self, _connections=set_heading.zero_heading(self._connections, timestamp))
+
+    def set_heading(self, heading: float, timestamp: float | None = None) -> Self:
+        return replace(self, _connections=set_heading.set_heading(self._connections, heading, timestamp))
+
+    def convert_to_euler_angles(self) -> Self:
+        return replace(self, _connections=convert_to_euler_angles.convert_to_euler_angles(self._connections))
 
     def _find(self, key: str) -> Connection:
         for attribute in ("serial_number", "device_name"):
