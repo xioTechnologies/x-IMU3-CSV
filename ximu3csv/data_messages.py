@@ -114,6 +114,18 @@ class CharArrayMessage(DataMessage):
 
 
 @dataclass(frozen=True)
+class OrientationMessage(FloatMessage):
+    @abstractmethod
+    def _to_rotations(self) -> scipy.spatial.transform.Rotation:
+        pass
+
+    @classmethod
+    @abstractmethod
+    def _from_rotations(cls, timestamp: np.ndarray, rotations: scipy.spatial.transform.Rotation) -> Self:
+        pass
+
+
+@dataclass(frozen=True)
 class Inertial(FloatMessage):
     _file_name = "Inertial.csv"
 
@@ -205,7 +217,7 @@ class HighGAccelerometer(FloatMessage):
 
 
 @dataclass(frozen=True)
-class Quaternion(FloatMessage):
+class Quaternion(OrientationMessage):
     _file_name = "Quaternion.csv"
 
     @property
@@ -241,7 +253,7 @@ class Quaternion(FloatMessage):
 
 
 @dataclass(frozen=True)
-class RotationMatrix(FloatMessage):
+class RotationMatrix(OrientationMessage):
     _file_name = "RotationMatrix.csv"
 
     @property
@@ -297,7 +309,7 @@ class RotationMatrix(FloatMessage):
 
 
 @dataclass(frozen=True)
-class EulerAngles(FloatMessage):
+class EulerAngles(OrientationMessage):
     _file_name = "EulerAngles.csv"
 
     @property

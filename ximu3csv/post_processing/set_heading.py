@@ -6,11 +6,7 @@ import numpy as np
 import scipy
 
 from ..connection import Connection, max_last_timestamp
-from ..data_messages import (
-    EulerAngles,
-    Quaternion,
-    RotationMatrix,
-)
+from ..data_messages import OrientationMessage
 
 
 def set_heading(connections: Sequence[Connection], heading: float, timestamp: float | None) -> tuple[Connection, ...]:
@@ -33,7 +29,7 @@ def set_heading(connections: Sequence[Connection], heading: float, timestamp: fl
     )
 
 
-def _set_heading_message(message: Quaternion | RotationMatrix | EulerAngles, heading: float, timestamp: float | None) -> Quaternion | RotationMatrix | EulerAngles:
+def _set_heading_message(message: OrientationMessage, heading: float, timestamp: float | None) -> OrientationMessage:
     if message.is_empty:
         return message
 

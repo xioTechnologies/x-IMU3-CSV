@@ -5,12 +5,7 @@ import numpy as np
 import scipy
 
 from ..connection import Connection
-from ..data_messages import (
-    EulerAngles,
-    FloatMessage,
-    Quaternion,
-    RotationMatrix,
-)
+from ..data_messages import FloatMessage, OrientationMessage
 
 
 def resample(connections: Sequence[Connection], sample_rate: float) -> tuple[Connection, ...]:
@@ -58,7 +53,7 @@ def _resample(message: FloatMessage, timestamp: np.ndarray) -> FloatMessage:
 
     time, indices = _extrapolate(message.timestamp, timestamp)
 
-    if isinstance(message, (Quaternion, RotationMatrix, EulerAngles)):
+    if isinstance(message, OrientationMessage):
         return message._from_rotations(timestamp, scipy.spatial.transform.Slerp(time, message._to_rotations()[indices])(timestamp))
 
     return replace(message, _csv=np.column_stack((timestamp, scipy.interpolate.interp1d(time, message._csv[indices, 1:], axis=0)(timestamp))))
