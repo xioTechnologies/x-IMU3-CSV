@@ -26,9 +26,10 @@ from .data_messages import (
     Sync,
     Temperature,
 )
+from .logged_data import LoggedData
 
 
-def read(path: Path | str, data_message_type: DataMessageType = DataMessageType.ALL) -> list[Connection]:
+def read(path: Path | str, data_message_type: DataMessageType = DataMessageType.ALL) -> LoggedData:
     path = Path(path).absolute()
 
     if not path.exists():
@@ -42,7 +43,9 @@ def read(path: Path | str, data_message_type: DataMessageType = DataMessageType.
     if not connection_directories:
         raise FileNotFoundError(f"No connection directories found: {path}")
 
-    return [_read_connection(d, data_message_type) for d in connection_directories]
+    connections = tuple(_read_connection(d, data_message_type) for d in connection_directories)
+
+    return LoggedData(path.name, None, connections)  # TODO: Read name and time from metadata.json
 
 
 def _read_connection(directory: Path, data_message_type: DataMessageType) -> Connection:

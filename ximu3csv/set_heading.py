@@ -4,38 +4,37 @@ from dataclasses import replace
 import numpy as np
 import scipy
 
-from .connection import Connection
 from .data_messages import (
     EulerAngles,
     FloatMessage,
     Quaternion,
     RotationMatrix,
 )
+from .logged_data import LoggedData
 
 
-def zero_heading(connections: list[Connection], timestamp: float | None = None) -> list[Connection]:
-    return set_heading(connections, 0, timestamp)
+def zero_heading(data: LoggedData, timestamp: float | None = None) -> LoggedData:
+    return set_heading(data, 0, timestamp)
 
 
-def set_heading(connections: list[Connection], heading: float, timestamp: float | None = None) -> list[Connection]:
-    if timestamp is not None:
-        last_timestamp = max((c.last_timestamp for c in connections if c.last_timestamp is not None), default=None)
+def set_heading(data: LoggedData, heading: float, timestamp: float | None = None) -> LoggedData:
+    if (timestamp is not None) and (data.last_timestamp is not None) and (timestamp > data.last_timestamp):
+        raise ValueError(f"Timestamp is after last timestamp: {timestamp} > {data.last_timestamp}")
 
-        if (last_timestamp is not None) and (timestamp > last_timestamp):
-            raise ValueError(f"Timestamp is after last timestamp: {timestamp} > {last_timestamp}")
-
-    if any(len(c.earth_acceleration.timestamp) > 0 for c in connections):
+    if any(len(c.earth_acceleration.timestamp) > 0 for c in data):
         warnings.warn("Heading not set for earth acceleration")
 
-    return [
+    connections = tuple(
         replace(
             c,
             quaternion=_set_heading_message(c.quaternion, heading, timestamp),
             rotation_matrix=_set_heading_message(c.rotation_matrix, heading, timestamp),
             euler_angles=_set_heading_message(c.euler_angles, heading, timestamp),
         )
-        for c in connections
-    ]
+        for c in data
+    )
+
+    return replace(data, _connections=connections)
 
 
 def _set_heading_message(message: FloatMessage, heading: float, timestamp: float | None) -> FloatMessage:

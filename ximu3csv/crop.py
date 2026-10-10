@@ -2,30 +2,27 @@ from dataclasses import replace
 
 import numpy as np
 
-from .connection import Connection
 from .data_messages import CharArrayMessage, DataMessage, FloatMessage
+from .logged_data import LoggedData
 
 
-def crop(connections: list[Connection], start: float | None = None, stop: float | None = None) -> list[Connection]:
+def crop(data: LoggedData, start: float | None = None, stop: float | None = None) -> LoggedData:
     if (start is None) and (stop is None):
         raise ValueError("No start or stop")
 
     if (start is not None) and (stop is not None) and (start > stop):
         raise ValueError(f"Start is after stop: {start} > {stop}")
 
-    if all(c.first_timestamp is None for c in connections):
+    if (data.first_timestamp is None) or (data.last_timestamp is None):
         raise ValueError("No timestamps")
 
-    first_timestamps = [c.first_timestamp for c in connections if c.first_timestamp is not None]
-    last_timestamps = [c.last_timestamp for c in connections if c.last_timestamp is not None]
+    if (start is not None) and (start > data.last_timestamp):
+        raise ValueError(f"Start is after last timestamp: {start} > {data.last_timestamp}")
 
-    if (start is not None) and (start > max(last_timestamps)):
-        raise ValueError(f"Start is after last timestamp: {start} > {max(last_timestamps)}")
+    if (stop is not None) and (stop < data.first_timestamp):
+        raise ValueError(f"Stop is before first timestamp: {stop} < {data.first_timestamp}")
 
-    if (stop is not None) and (stop < min(first_timestamps)):
-        raise ValueError(f"Stop is before first timestamp: {stop} < {min(first_timestamps)}")
-
-    return [
+    connections = tuple(
         replace(
             c,
             inertial=_crop(c.inertial, start, stop),
@@ -47,8 +44,10 @@ def crop(connections: list[Connection], start: float | None = None, stop: float 
             notification=_crop(c.notification, start, stop),
             error=_crop(c.error, start, stop),
         )
-        for c in connections
-    ]
+        for c in data
+    )
+
+    return replace(data, _connections=connections)
 
 
 def _crop(message: DataMessage, start: float | None, stop: float | None) -> DataMessage:

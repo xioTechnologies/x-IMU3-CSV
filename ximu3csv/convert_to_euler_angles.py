@@ -5,10 +5,13 @@ import scipy
 
 from .connection import Connection
 from .data_messages import EulerAngles
+from .logged_data import LoggedData
 
 
-def convert_to_euler_angles(connections: list[Connection]) -> list[Connection]:
-    return [replace(c, euler_angles=_convert_to_euler_angles(c)) for c in connections]
+def convert_to_euler_angles(data: LoggedData) -> LoggedData:
+    connections = tuple(replace(c, euler_angles=_convert_to_euler_angles(c)) for c in data)
+
+    return replace(data, _connections=connections)
 
 
 def _convert_to_euler_angles(connection: Connection) -> EulerAngles:

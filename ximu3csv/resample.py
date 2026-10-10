@@ -3,24 +3,24 @@ from dataclasses import replace
 import numpy as np
 import scipy
 
-from .connection import Connection
 from .data_messages import (
     EulerAngles,
     FloatMessage,
     Quaternion,
     RotationMatrix,
 )
+from .logged_data import LoggedData
 
 
-def resample(connections: list[Connection], sample_rate: float) -> list[Connection]:
+def resample(data: LoggedData, sample_rate: float) -> LoggedData:
     if sample_rate <= 0:
         raise ValueError(f"Invalid sample rate: {sample_rate}")
 
-    if all(c.first_timestamp is None for c in connections):
+    if data.first_timestamp is None:
         raise ValueError("No timestamps")
 
-    first_timestamps = [c.first_timestamp for c in connections if c.first_timestamp is not None]
-    last_timestamps = [c.last_timestamp for c in connections if c.last_timestamp is not None]
+    first_timestamps = [c.first_timestamp for c in data if c.first_timestamp is not None]
+    last_timestamps = [c.last_timestamp for c in data if c.last_timestamp is not None]
 
     first_timestamp = max(first_timestamps)
     last_timestamp = min(last_timestamps)
@@ -30,7 +30,7 @@ def resample(connections: list[Connection], sample_rate: float) -> list[Connecti
 
     timestamp = np.arange(first_timestamp, last_timestamp, 1e6 / sample_rate)
 
-    return [
+    connections = tuple(
         replace(
             c,
             inertial=_resample(c.inertial, timestamp),
@@ -47,8 +47,10 @@ def resample(connections: list[Connection], sample_rate: float) -> list[Connecti
             rssi=_resample(c.rssi, timestamp),
             button=_resample(c.button, timestamp),  # TODO: Do not interpolate edges
         )
-        for c in connections
-    ]
+        for c in data
+    )
+
+    return replace(data, _connections=connections)
 
 
 def _resample(message: FloatMessage, timestamp: np.ndarray) -> FloatMessage:

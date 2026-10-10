@@ -2,21 +2,19 @@ from dataclasses import replace
 
 import numpy as np
 
-from .connection import Connection
 from .data_messages import CharArrayMessage, DataMessage, FloatMessage
+from .logged_data import LoggedData
 
 
-def zero_timestamps(connections: list[Connection]) -> list[Connection]:
-    if all(c.first_timestamp is None for c in connections):
+def zero_timestamps(data: LoggedData) -> LoggedData:
+    if data.first_timestamp is None:
         raise ValueError("No timestamps")
 
-    first_timestamps = [c.first_timestamp for c in connections if c.first_timestamp is not None]
-
-    return offset_timestamps(connections, -min(first_timestamps))
+    return offset_timestamps(data, -data.first_timestamp)
 
 
-def offset_timestamps(connections: list[Connection], offset: float) -> list[Connection]:
-    return [
+def offset_timestamps(data: LoggedData, offset: float) -> LoggedData:
+    connections = tuple(
         replace(
             c,
             inertial=_offset_timestamps(c.inertial, offset),
@@ -38,8 +36,10 @@ def offset_timestamps(connections: list[Connection], offset: float) -> list[Conn
             notification=_offset_timestamps(c.notification, offset),
             error=_offset_timestamps(c.error, offset),
         )
-        for c in connections
-    ]
+        for c in data
+    )
+
+    return replace(data, _connections=connections)
 
 
 def _offset_timestamps(message: DataMessage, offset: float) -> DataMessage:
