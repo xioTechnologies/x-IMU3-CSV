@@ -1,6 +1,5 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, fields
-from datetime import datetime
 from functools import cached_property
 from typing import Any
 
@@ -29,16 +28,14 @@ from .data_messages import (
 
 @dataclass(frozen=True)
 class Connection:
+    # Metadata.json
+    model: str | None
+    serial_number: str | None
+    device_name: str | None
+    config: str | None
+
     # Command.json
     command: list[dict[str, Any]]
-
-    # "ping" from Command.json
-    interface: str | None
-    device_name: str | None
-    serial_number: str | None
-
-    # "time" from Command.json
-    time: datetime | None
 
     # *.csv files
     inertial: Inertial

@@ -1,4 +1,5 @@
 import json
+from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -27,6 +28,7 @@ from .data_messages import (
     Temperature,
 )
 from .logged_data import LoggedData
+from .metadata import read_metadata
 
 
 def read(path: Path | str, data_message_type: DataMessageType = DataMessageType.ALL) -> LoggedData:
@@ -38,6 +40,24 @@ def read(path: Path | str, data_message_type: DataMessageType = DataMessageType.
     if not path.is_dir():
         raise NotADirectoryError(f"Not a directory: {path}")
 
+    metadata = read_metadata(path)
+
+    if metadata is not None:
+        return LoggedData(
+            metadata.name,
+            metadata.time,
+            tuple(
+                replace(
+                    _read_connection(path / c.directory, data_message_type),
+                    model=c.model,
+                    serial_number=c.serial_number,
+                    device_name=c.device_name,
+                    config=c.config,
+                )
+                for c in metadata.connections
+            ),
+        )
+
     connection_directories = [d for d in path.iterdir() if d.is_dir() and not d.name.startswith(".")]
 
     if not connection_directories:
@@ -45,22 +65,35 @@ def read(path: Path | str, data_message_type: DataMessageType = DataMessageType.
 
     connections = tuple(_read_connection(d, data_message_type) for d in connection_directories)
 
-    return LoggedData(path.name, None, connections)  # TODO: Read name and time from metadata.json
+    ping_responses = tuple(_get_ping_response(c.command) for c in connections)
+
+    times = tuple(_get_time(c.command) for c in connections)
+
+    return LoggedData(
+        path.name,
+        max((t for t in times if t is not None), default=None),
+        tuple(
+            replace(
+                c,
+                model=m,
+                serial_number=s,
+                device_name=d,
+            )
+            for c, (m, s, d) in zip(connections, ping_responses)
+        ),
+    )
 
 
 def _read_connection(directory: Path, data_message_type: DataMessageType) -> Connection:
-    command = _read_command(directory)
-
-    interface, device_name, serial_number = _parse_ping(command)
-
-    time = _parse_time(command)
+    if not directory.is_dir():
+        raise FileNotFoundError(f"Directory not found: {directory}")
 
     return Connection(
-        command,
-        interface,
-        device_name,
-        serial_number,
-        time,
+        None,
+        None,
+        None,
+        None,
+        _read_command(directory),
         _read_data_message(directory, Inertial, DataMessageType.INERTIAL, data_message_type),
         _read_data_message(directory, Magnetometer, DataMessageType.MAGNETOMETER, data_message_type),
         _read_data_message(directory, HighGAccelerometer, DataMessageType.HIGH_G_ACCELEROMETER, data_message_type),
@@ -96,32 +129,26 @@ def _read_command(directory: Path) -> list[dict[str, Any]]:
         raise
 
 
-def _parse_ping(command: list[dict[str, Any]]) -> tuple[str | None, str | None, str | None]:
-    for response in command:
-        for key, value in response.items():
-            if key == "ping":
-                try:
-                    return value["interface"], value["name"], value["sn"]
-                except Exception:
-                    print(f"Unable to parse ping response: {value}")
-
-    return None, None, None
-
-
-def _parse_time(command: list[dict[str, Any]]) -> datetime | None:
-    for response in command:
-        for key, value in response.items():
-            if key == "time":
-                try:
-                    return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
-                except Exception:
-                    print(f"Unable to parse time: {value}")
-
-    return None
-
-
 def _read_data_message(directory: Path, data_message: type[DataMessage], flag: DataMessageType, data_message_type: DataMessageType) -> DataMessage:
     if flag not in data_message_type:
         return data_message._empty()
 
     return data_message._read(directory)
+
+
+def _get_ping_response(command: list[dict[str, Any]]) -> tuple[str | None, str | None, str | None]:
+    for response in command:
+        if "ping" in response:
+            ping = response["ping"]
+
+            return ping.get("model"), ping.get("sn"), ping.get("name")
+
+    return None, None, None
+
+
+def _get_time(command: list[dict[str, Any]]) -> datetime | None:
+    for response in command:
+        if "time" in response:
+            return datetime.strptime(response["time"], "%Y-%m-%d %H:%M:%S")
+
+    return None
