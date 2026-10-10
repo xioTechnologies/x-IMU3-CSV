@@ -14,7 +14,7 @@ from .device import Device
 
 def resample(devices: list[Device], sample_rate: float) -> list[Device]:
     if sample_rate <= 0:
-        raise ValueError(f"Invalid sample rate: {sample_rate} Hz")
+        raise ValueError(f"Invalid sample rate: {sample_rate}")
 
     if all(d.first_timestamp is None for d in devices):
         raise ValueError("No timestamps")
