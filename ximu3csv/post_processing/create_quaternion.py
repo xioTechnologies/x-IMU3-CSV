@@ -9,15 +9,15 @@ from ..connection import Connection
 from ..data_messages import Quaternion
 
 
-def calculate_quaternion(connections: Sequence[Connection]) -> tuple[Connection, ...]:
+def create_quaternion(connections: Sequence[Connection]) -> tuple[Connection, ...]:
     for connection in connections:
         if not connection.quaternion.is_empty:
-            warnings.warn(f"Quaternion already exists for {connection}")  # TODO: implement printable identifier for Connection
+            warnings.warn(f"Quaternion already exists: {connection}")
 
-    return tuple(replace(c, quaternion=_calculate_quaternion(c)) if c.quaternion.is_empty else c for c in connections)
+    return tuple(replace(c, quaternion=_create_quaternion(c)) if c.quaternion.is_empty else c for c in connections)
 
 
-def _calculate_quaternion(connection: Connection) -> Quaternion:
+def _create_quaternion(connection: Connection) -> Quaternion:
     if not connection.rotation_matrix.is_empty:
         timestamp = connection.rotation_matrix.timestamp
         rotations = scipy.spatial.transform.Rotation.from_matrix(connection.rotation_matrix.xx_to_zz.reshape(-1, 3, 3))

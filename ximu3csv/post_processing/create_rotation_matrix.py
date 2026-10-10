@@ -9,15 +9,15 @@ from ..connection import Connection
 from ..data_messages import RotationMatrix
 
 
-def calculate_rotation_matrix(connections: Sequence[Connection]) -> tuple[Connection, ...]:
+def create_rotation_matrix(connections: Sequence[Connection]) -> tuple[Connection, ...]:
     for connection in connections:
         if not connection.rotation_matrix.is_empty:
-            warnings.warn(f"Rotation matrix already exists for {connection}")  # TODO: implement printable identifier for Connection
+            warnings.warn(f"Rotation matrix already exists: {connection}")
 
-    return tuple(replace(c, rotation_matrix=_calculate_rotation_matrix(c)) if c.rotation_matrix.is_empty else c for c in connections)
+    return tuple(replace(c, rotation_matrix=_create_rotation_matrix(c)) if c.rotation_matrix.is_empty else c for c in connections)
 
 
-def _calculate_rotation_matrix(connection: Connection) -> RotationMatrix:
+def _create_rotation_matrix(connection: Connection) -> RotationMatrix:
     if not connection.quaternion.is_empty:
         timestamp = connection.quaternion.timestamp
         rotations = scipy.spatial.transform.Rotation.from_quat(connection.quaternion.wxyz[:, [1, 2, 3, 0]])

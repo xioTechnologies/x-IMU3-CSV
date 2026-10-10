@@ -57,6 +57,9 @@ class Connection:
     notification: Notification
     error: Error
 
+    def __str__(self) -> str:
+        return f"{self.model!r}, {self.serial_number!r}, {self.device_name!r}, {self.config!r}"
+
     @cached_property
     def first_timestamp(self) -> float | None:
         timestamps = [m.timestamp[0] for m in self._data_messages() if not m.is_empty]

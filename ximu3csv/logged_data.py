@@ -5,7 +5,17 @@ from functools import cached_property
 from typing import Self, overload
 
 from .connection import Connection, max_last_timestamp, min_first_timestamp
-from .post_processing import calculate_euler_angles, calculate_quaternion, calculate_rotation_matrix, crop, offset_timestamps, resample, set_heading
+from .post_processing import (
+    create_earth_acceleration,
+    create_euler_angles,
+    create_linear_acceleration,
+    create_quaternion,
+    create_rotation_matrix,
+    crop,
+    offset_timestamps,
+    resample,
+    set_heading,
+)
 
 
 @dataclass(frozen=True)
@@ -65,21 +75,27 @@ class LoggedData:
     def zero_heading(self, timestamp: float | None = None) -> Self:
         return replace(self, _connections=set_heading.zero_heading(self._connections, timestamp))
 
-    def calculate_quaternion(self) -> Self:
-        return replace(self, _connections=calculate_quaternion.calculate_quaternion(self._connections))
+    def create_quaternion(self) -> Self:
+        return replace(self, _connections=create_quaternion.create_quaternion(self._connections))
 
-    def calculate_rotation_matrix(self) -> Self:
-        return replace(self, _connections=calculate_rotation_matrix.calculate_rotation_matrix(self._connections))
+    def create_rotation_matrix(self) -> Self:
+        return replace(self, _connections=create_rotation_matrix.create_rotation_matrix(self._connections))
 
-    def calculate_euler_angles(self) -> Self:
-        return replace(self, _connections=calculate_euler_angles.calculate_euler_angles(self._connections))
+    def create_euler_angles(self) -> Self:
+        return replace(self, _connections=create_euler_angles.create_euler_angles(self._connections))
+
+    def create_linear_acceleration(self, z_up: bool = True) -> Self:
+        return replace(self, _connections=create_linear_acceleration.create_linear_acceleration(self._connections, z_up))
+
+    def create_earth_acceleration(self, z_up: bool = True) -> Self:
+        return replace(self, _connections=create_earth_acceleration.create_earth_acceleration(self._connections, z_up))
 
     def _find(self, key: str) -> Connection:
         for attribute in ("config", "serial_number", "device_name", "model"):
             matches = [c for c in self._connections if getattr(c, attribute) == key]
 
             if len(matches) > 1:
-                matches_string = "\n".join(f"{c.model!r}, {c.serial_number!r}, {c.device_name!r}, {c.config!r}" for c in matches)
+                matches_string = "\n".join(str(c) for c in matches)
 
                 raise RuntimeError(f"Multiple connections found for {key!r}:\n{matches_string}")
 
