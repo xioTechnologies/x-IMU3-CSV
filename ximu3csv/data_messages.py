@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Flag, auto
 from pathlib import Path
-from typing import Self
+from typing import ClassVar, Self
 
 import numpy as np
 
@@ -32,6 +32,8 @@ class DataMessageType(Flag):
 
 @dataclass(frozen=True)
 class DataMessage(ABC):
+    _file_name: ClassVar[str]
+
     @property
     @abstractmethod
     def timestamp(self) -> np.ndarray:
@@ -58,7 +60,7 @@ class FloatMessage(DataMessage):
 
     @classmethod
     def _read(cls, connection_path: Path) -> Self:
-        file_path = connection_path / f"{cls.__name__}.csv"
+        file_path = connection_path / cls._file_name
 
         if not file_path.is_file():
             return cls._empty()
@@ -85,7 +87,7 @@ class CharArrayMessage(DataMessage):
 
     @classmethod
     def _read(cls, connection_path: Path) -> Self:
-        file_path = connection_path / f"{cls.__name__}.csv"
+        file_path = connection_path / cls._file_name
 
         if not file_path.is_file():
             return cls._empty()
@@ -108,6 +110,8 @@ class CharArrayMessage(DataMessage):
 
 @dataclass(frozen=True)
 class Inertial(FloatMessage):
+    _file_name = "Inertial.csv"
+
     @property
     def gyroscope_xyz(self) -> np.ndarray:
         return self._csv[:, 1:4]
@@ -147,6 +151,8 @@ class Inertial(FloatMessage):
 
 @dataclass(frozen=True)
 class Magnetometer(FloatMessage):
+    _file_name = "Magnetometer.csv"
+
     @property
     def xyz(self) -> np.ndarray:
         return self._csv[:, 1:4]
@@ -170,6 +176,8 @@ class Magnetometer(FloatMessage):
 
 @dataclass(frozen=True)
 class HighGAccelerometer(FloatMessage):
+    _file_name = "HighGAccelerometer.csv"
+
     @property
     def xyz(self) -> np.ndarray:
         return self._csv[:, 1:4]
@@ -193,6 +201,8 @@ class HighGAccelerometer(FloatMessage):
 
 @dataclass(frozen=True)
 class Quaternion(FloatMessage):
+    _file_name = "Quaternion.csv"
+
     @property
     def wxyz(self) -> np.ndarray:
         return self._csv[:, 1:5]
@@ -220,6 +230,8 @@ class Quaternion(FloatMessage):
 
 @dataclass(frozen=True)
 class RotationMatrix(FloatMessage):
+    _file_name = "RotationMatrix.csv"
+
     @property
     def xx_to_zz(self) -> np.ndarray:
         return self._csv[:, 1:10]
@@ -267,6 +279,8 @@ class RotationMatrix(FloatMessage):
 
 @dataclass(frozen=True)
 class EulerAngles(FloatMessage):
+    _file_name = "EulerAngles.csv"
+
     @property
     def roll_pitch_yaw(self) -> np.ndarray:
         return self._csv[:, 1:4]
@@ -290,6 +304,8 @@ class EulerAngles(FloatMessage):
 
 @dataclass(frozen=True)
 class LinearAcceleration(FloatMessage):
+    _file_name = "LinearAcceleration.csv"
+
     @property
     def xyz(self) -> np.ndarray:
         return self._csv[:, 1:4]
@@ -313,6 +329,8 @@ class LinearAcceleration(FloatMessage):
 
 @dataclass(frozen=True)
 class EarthAcceleration(FloatMessage):
+    _file_name = "EarthAcceleration.csv"
+
     @property
     def xyz(self) -> np.ndarray:
         return self._csv[:, 1:4]
@@ -336,16 +354,18 @@ class EarthAcceleration(FloatMessage):
 
 @dataclass(frozen=True)
 class AhrsStatus(CharArrayMessage):
-    pass
+    _file_name = "AhrsStatus.csv"
 
 
 @dataclass(frozen=True)
 class SerialAccessory(CharArrayMessage):
-    pass
+    _file_name = "SerialAccessory.csv"
 
 
 @dataclass(frozen=True)
 class Sync(FloatMessage):
+    _file_name = "Sync.csv"
+
     @property
     def edge(self) -> np.ndarray:
         return self._csv[:, 1]
@@ -357,11 +377,13 @@ class Sync(FloatMessage):
 
 @dataclass(frozen=True)
 class Ltc(CharArrayMessage):
-    pass
+    _file_name = "Ltc.csv"
 
 
 @dataclass(frozen=True)
 class Temperature(FloatMessage):
+    _file_name = "Temperature.csv"
+
     @property
     def temperature(self) -> np.ndarray:
         return self._csv[:, 1]
@@ -373,6 +395,8 @@ class Temperature(FloatMessage):
 
 @dataclass(frozen=True)
 class Battery(FloatMessage):
+    _file_name = "Battery.csv"
+
     @property
     def percentage(self) -> np.ndarray:
         return self._csv[:, 1]
@@ -392,6 +416,8 @@ class Battery(FloatMessage):
 
 @dataclass(frozen=True)
 class Rssi(FloatMessage):
+    _file_name = "Rssi.csv"
+
     @property
     def percentage(self) -> np.ndarray:
         return self._csv[:, 1]
@@ -407,6 +433,8 @@ class Rssi(FloatMessage):
 
 @dataclass(frozen=True)
 class Button(FloatMessage):
+    _file_name = "Button.csv"
+
     @property
     def state(self) -> np.ndarray:
         return self._csv[:, 1]
@@ -418,9 +446,9 @@ class Button(FloatMessage):
 
 @dataclass(frozen=True)
 class Notification(CharArrayMessage):
-    pass
+    _file_name = "Notification.csv"
 
 
 @dataclass(frozen=True)
 class Error(CharArrayMessage):
-    pass
+    _file_name = "Error.csv"

@@ -69,11 +69,11 @@ class LoggedData:
         return replace(self, _connections=convert_to_euler_angles.convert_to_euler_angles(self._connections))
 
     def _find(self, key: str) -> Connection:
-        for attribute in ("serial_number", "device_name"):
+        for attribute in ("config", "serial_number", "device_name", "model"):
             matches = [c for c in self._connections if getattr(c, attribute) == key]
 
             if len(matches) > 1:
-                matches_string = "\n".join(f"{c.device_name} {c.serial_number}" for c in matches)
+                matches_string = "\n".join(f"{c.model!r}, {c.serial_number!r}, {c.device_name!r}, {c.config!r}" for c in matches)
 
                 raise RuntimeError(f"Multiple connections found for {key!r}:\n{matches_string}")
 
