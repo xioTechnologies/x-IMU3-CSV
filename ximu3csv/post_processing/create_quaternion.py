@@ -2,9 +2,6 @@ import warnings
 from collections.abc import Sequence
 from dataclasses import replace
 
-import numpy as np
-import scipy
-
 from ..connection import Connection
 from ..data_messages import Quaternion
 
@@ -19,19 +16,8 @@ def create_quaternion(connections: Sequence[Connection]) -> tuple[Connection, ..
 
 def _create_quaternion(connection: Connection) -> Quaternion:
     if not connection.rotation_matrix.is_empty:
-        timestamp = connection.rotation_matrix.timestamp
-        rotations = scipy.spatial.transform.Rotation.from_matrix(connection.rotation_matrix.xx_to_zz.reshape(-1, 3, 3))
+        return Quaternion._from_rotations(connection.rotation_matrix.timestamp, connection.rotation_matrix._to_rotations())
     elif not connection.euler_angles.is_empty:
-        timestamp = connection.euler_angles.timestamp
-        rotations = scipy.spatial.transform.Rotation.from_euler("ZYX", connection.euler_angles.roll_pitch_yaw[:, [2, 1, 0]], degrees=True)
+        return Quaternion._from_rotations(connection.euler_angles.timestamp, connection.euler_angles._to_rotations())
     else:
         return connection.quaternion
-
-    return Quaternion(
-        _csv=np.column_stack(
-            (
-                timestamp,
-                rotations.as_quat()[:, [3, 0, 1, 2]],
-            )
-        ),
-    )

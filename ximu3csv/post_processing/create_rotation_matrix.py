@@ -2,9 +2,6 @@ import warnings
 from collections.abc import Sequence
 from dataclasses import replace
 
-import numpy as np
-import scipy
-
 from ..connection import Connection
 from ..data_messages import RotationMatrix
 
@@ -19,19 +16,8 @@ def create_rotation_matrix(connections: Sequence[Connection]) -> tuple[Connectio
 
 def _create_rotation_matrix(connection: Connection) -> RotationMatrix:
     if not connection.quaternion.is_empty:
-        timestamp = connection.quaternion.timestamp
-        rotations = scipy.spatial.transform.Rotation.from_quat(connection.quaternion.wxyz[:, [1, 2, 3, 0]])
+        return RotationMatrix._from_rotations(connection.quaternion.timestamp, connection.quaternion._to_rotations())
     elif not connection.euler_angles.is_empty:
-        timestamp = connection.euler_angles.timestamp
-        rotations = scipy.spatial.transform.Rotation.from_euler("ZYX", connection.euler_angles.roll_pitch_yaw[:, [2, 1, 0]], degrees=True)
+        return RotationMatrix._from_rotations(connection.euler_angles.timestamp, connection.euler_angles._to_rotations())
     else:
         return connection.rotation_matrix
-
-    return RotationMatrix(
-        _csv=np.column_stack(
-            (
-                timestamp,
-                rotations.as_matrix().reshape(-1, 9),
-            )
-        ),
-    )

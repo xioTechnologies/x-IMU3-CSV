@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import ClassVar, Self
 
 import numpy as np
+import scipy
 
 
 class DataMessageFlag(Flag):
@@ -227,6 +228,13 @@ class Quaternion(FloatMessage):
     def z(self) -> np.ndarray:
         return self._csv[:, 4]
 
+    def _to_rotations(self) -> scipy.spatial.transform.Rotation:
+        return scipy.spatial.transform.Rotation.from_quat(self.wxyz[:, [1, 2, 3, 0]])
+
+    @classmethod
+    def _from_rotations(cls, timestamp: np.ndarray, rotations: scipy.spatial.transform.Rotation) -> Self:
+        return cls(np.column_stack((timestamp, rotations.as_quat()[:, [3, 0, 1, 2]])))
+
     @classmethod
     def _empty(cls) -> Self:
         return cls(np.empty([0, 5]))
@@ -276,6 +284,13 @@ class RotationMatrix(FloatMessage):
     def zz(self) -> np.ndarray:
         return self._csv[:, 9]
 
+    def _to_rotations(self) -> scipy.spatial.transform.Rotation:
+        return scipy.spatial.transform.Rotation.from_matrix(self.xx_to_zz.reshape(-1, 3, 3))
+
+    @classmethod
+    def _from_rotations(cls, timestamp: np.ndarray, rotations: scipy.spatial.transform.Rotation) -> Self:
+        return cls(np.column_stack((timestamp, rotations.as_matrix().reshape(-1, 9))))
+
     @classmethod
     def _empty(cls) -> Self:
         return cls(np.empty([0, 10]))
@@ -300,6 +315,13 @@ class EulerAngles(FloatMessage):
     @property
     def yaw(self) -> np.ndarray:
         return self._csv[:, 3]
+
+    def _to_rotations(self) -> scipy.spatial.transform.Rotation:
+        return scipy.spatial.transform.Rotation.from_euler("ZYX", self.roll_pitch_yaw[:, [2, 1, 0]], degrees=True)
+
+    @classmethod
+    def _from_rotations(cls, timestamp: np.ndarray, rotations: scipy.spatial.transform.Rotation) -> Self:
+        return cls(np.column_stack((timestamp, rotations.as_euler("ZYX", degrees=True)[:, [2, 1, 0]])))
 
     @classmethod
     def _empty(cls) -> Self:

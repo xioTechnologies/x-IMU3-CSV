@@ -56,75 +56,23 @@ def _resample(message: FloatMessage, timestamp: np.ndarray) -> FloatMessage:
     if message.is_empty:
         return message
 
-    if isinstance(message, Quaternion):
-        csv = np.column_stack(
-            (
-                timestamp,
-                _slerp_quaternion(message.timestamp / 1e6, message._csv[:, 1:], timestamp / 1e6),
-            )
-        )
-    elif isinstance(message, EulerAngles):
-        csv = np.column_stack(
-            (
-                timestamp,
-                _slerp_euler_angles(message.timestamp / 1e6, message._csv[:, 1:], timestamp / 1e6),
-            )
-        )
-    elif isinstance(message, RotationMatrix):
-        csv = np.column_stack(
-            (
-                timestamp,
-                _slerp_rotation_matrix(message.timestamp / 1e6, message._csv[:, 1:], timestamp / 1e6),
-            )
-        )
-    else:
-        csv = np.column_stack(
-            (
-                timestamp,
-                _interpolate(message.timestamp / 1e6, message._csv[:, 1:], timestamp / 1e6),
-            )
-        )
+    time, indices = _extrapolate(message.timestamp, timestamp)
 
-    return replace(message, _csv=csv)
+    if isinstance(message, (Quaternion, RotationMatrix, EulerAngles)):
+        return message._from_rotations(timestamp, scipy.spatial.transform.Slerp(time, message._to_rotations()[indices])(timestamp))
+
+    return replace(message, _csv=np.column_stack((timestamp, scipy.interpolate.interp1d(time, message._csv[indices, 1:], axis=0)(timestamp))))
 
 
-def _slerp_quaternion(time: np.ndarray, quaternion: np.ndarray, new_time: np.ndarray) -> np.ndarray:
-    time, quaternion = _extrapolate(time, quaternion, new_time)
+def _extrapolate(time: np.ndarray, new_time: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    indices = np.arange(len(time))
 
-    rotations = scipy.spatial.transform.Rotation.from_quat(quaternion[:, [1, 2, 3, 0]])
-
-    return scipy.spatial.transform.Slerp(time, rotations)(new_time).as_quat()[:, [3, 0, 1, 2]]
-
-
-def _slerp_euler_angles(time: np.ndarray, euler_angles: np.ndarray, new_time: np.ndarray) -> np.ndarray:
-    time, euler_angles = _extrapolate(time, euler_angles, new_time)
-
-    rotations = scipy.spatial.transform.Rotation.from_euler("ZYX", euler_angles[:, [2, 1, 0]], degrees=True)
-
-    return scipy.spatial.transform.Slerp(time, rotations)(new_time).as_euler("ZYX", degrees=True)[:, [2, 1, 0]]
-
-
-def _slerp_rotation_matrix(time: np.ndarray, rotation_matrix: np.ndarray, new_time: np.ndarray) -> np.ndarray:
-    time, rotation_matrix = _extrapolate(time, rotation_matrix, new_time)
-
-    rotations = scipy.spatial.transform.Rotation.from_matrix(rotation_matrix.reshape(-1, 3, 3))
-
-    return scipy.spatial.transform.Slerp(time, rotations)(new_time).as_matrix().reshape(-1, 9)
-
-
-def _interpolate(time: np.ndarray, values: np.ndarray, new_time: np.ndarray) -> np.ndarray:
-    time, values = _extrapolate(time, values, new_time)
-
-    return scipy.interpolate.interp1d(time, values, axis=0)(new_time)
-
-
-def _extrapolate(time: np.ndarray, values: np.ndarray, new_time: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     if new_time[0] < time[0]:
         time = np.concatenate(([new_time[0]], time))
-        values = np.concatenate(([values[0, :]], values))
+        indices = np.concatenate(([0], indices))
 
     if new_time[-1] > time[-1]:
         time = np.concatenate((time, [new_time[-1]]))
-        values = np.concatenate((values, [values[-1, :]]))
+        indices = np.concatenate((indices, [indices[-1]]))
 
-    return time, values
+    return time, indices

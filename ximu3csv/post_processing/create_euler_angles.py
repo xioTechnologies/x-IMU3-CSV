@@ -2,9 +2,6 @@ import warnings
 from collections.abc import Sequence
 from dataclasses import replace
 
-import numpy as np
-import scipy
-
 from ..connection import Connection
 from ..data_messages import EulerAngles
 
@@ -19,19 +16,8 @@ def create_euler_angles(connections: Sequence[Connection]) -> tuple[Connection, 
 
 def _create_euler_angles(connection: Connection) -> EulerAngles:
     if not connection.quaternion.is_empty:
-        timestamp = connection.quaternion.timestamp
-        rotations = scipy.spatial.transform.Rotation.from_quat(connection.quaternion.wxyz[:, [1, 2, 3, 0]])
+        return EulerAngles._from_rotations(connection.quaternion.timestamp, connection.quaternion._to_rotations())
     elif not connection.rotation_matrix.is_empty:
-        timestamp = connection.rotation_matrix.timestamp
-        rotations = scipy.spatial.transform.Rotation.from_matrix(connection.rotation_matrix.xx_to_zz.reshape(-1, 3, 3))
+        return EulerAngles._from_rotations(connection.rotation_matrix.timestamp, connection.rotation_matrix._to_rotations())
     else:
         return connection.euler_angles
-
-    return EulerAngles(
-        _csv=np.column_stack(
-            (
-                timestamp,
-                rotations.as_euler("ZYX", degrees=True)[:, [2, 1, 0]],
-            )
-        ),
-    )

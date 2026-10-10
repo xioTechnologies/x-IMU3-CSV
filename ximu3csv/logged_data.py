@@ -6,9 +6,8 @@ from typing import Self, overload
 
 from .connection import Connection, max_last_timestamp, min_first_timestamp
 from .post_processing import (
-    create_earth_acceleration,
+    create_acceleration,
     create_euler_angles,
-    create_linear_acceleration,
     create_quaternion,
     create_rotation_matrix,
     crop,
@@ -85,10 +84,10 @@ class LoggedData:
         return replace(self, _connections=create_euler_angles.create_euler_angles(self._connections))
 
     def create_linear_acceleration(self, z_up: bool = True) -> Self:
-        return replace(self, _connections=create_linear_acceleration.create_linear_acceleration(self._connections, z_up))
+        return replace(self, _connections=create_acceleration.create_linear_acceleration(self._connections, z_up))
 
     def create_earth_acceleration(self, z_up: bool = True) -> Self:
-        return replace(self, _connections=create_earth_acceleration.create_earth_acceleration(self._connections, z_up))
+        return replace(self, _connections=create_acceleration.create_earth_acceleration(self._connections, z_up))
 
     def _find(self, key: str) -> Connection:
         for attribute in ("config", "serial_number", "device_name", "model"):
