@@ -7,15 +7,6 @@ from .connection import Connection, min_first_timestamp
 from .data_messages import CharArrayMessage, DataMessage, FloatMessage
 
 
-def zero_timestamps(connections: Sequence[Connection]) -> tuple[Connection, ...]:
-    first_timestamp = min_first_timestamp(connections)
-
-    if first_timestamp is None:
-        raise ValueError("No timestamps")
-
-    return offset_timestamps(connections, -first_timestamp)
-
-
 def offset_timestamps(connections: Sequence[Connection], offset: float) -> tuple[Connection, ...]:
     return tuple(
         replace(
@@ -49,3 +40,12 @@ def _offset_timestamps(message: DataMessage, offset: float) -> DataMessage:
             return replace(message, _csv=np.column_stack((message._csv[:, 0] + offset, message._csv[:, 1:])))
         case CharArrayMessage():
             return replace(message, _timestamp=message._timestamp + offset)
+
+
+def zero_timestamps(connections: Sequence[Connection]) -> tuple[Connection, ...]:
+    first_timestamp = min_first_timestamp(connections)
+
+    if first_timestamp is None:
+        raise ValueError("No timestamps")
+
+    return offset_timestamps(connections, -first_timestamp)

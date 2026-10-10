@@ -14,10 +14,6 @@ from .data_messages import (
 )
 
 
-def zero_heading(connections: Sequence[Connection], timestamp: float | None) -> tuple[Connection, ...]:
-    return set_heading(connections, 0, timestamp)
-
-
 def set_heading(connections: Sequence[Connection], heading: float, timestamp: float | None) -> tuple[Connection, ...]:
     last_timestamp = max_last_timestamp(connections)
 
@@ -84,3 +80,7 @@ def _set_heading_rotations(rotations: scipy.spatial.transform.Rotation, heading:
     rotations[index:] = scipy.spatial.transform.Rotation.from_euler("Z", angle, degrees=True) * rotations[index:]
 
     return rotations
+
+
+def zero_heading(connections: Sequence[Connection], timestamp: float | None) -> tuple[Connection, ...]:
+    return set_heading(connections, 0, timestamp)

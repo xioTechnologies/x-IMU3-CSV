@@ -50,20 +50,20 @@ class LoggedData:
     def crop(self, start: float | None = None, stop: float | None = None) -> Self:
         return replace(self, _connections=crop.crop(self._connections, start, stop))
 
-    def zero_timestamps(self) -> Self:
-        return replace(self, _connections=offset_timestamps.zero_timestamps(self._connections))
-
     def offset_timestamps(self, offset: float) -> Self:
         return replace(self, _connections=offset_timestamps.offset_timestamps(self._connections, offset))
+
+    def zero_timestamps(self) -> Self:
+        return replace(self, _connections=offset_timestamps.zero_timestamps(self._connections))
 
     def resample(self, sample_rate: float) -> Self:
         return replace(self, _connections=resample.resample(self._connections, sample_rate))
 
-    def zero_heading(self, timestamp: float | None = None) -> Self:
-        return replace(self, _connections=set_heading.zero_heading(self._connections, timestamp))
-
     def set_heading(self, heading: float, timestamp: float | None = None) -> Self:
         return replace(self, _connections=set_heading.set_heading(self._connections, heading, timestamp))
+
+    def zero_heading(self, timestamp: float | None = None) -> Self:
+        return replace(self, _connections=set_heading.zero_heading(self._connections, timestamp))
 
     def convert_to_euler_angles(self) -> Self:
         return replace(self, _connections=convert_to_euler_angles.convert_to_euler_angles(self._connections))
