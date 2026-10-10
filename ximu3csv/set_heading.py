@@ -1,10 +1,10 @@
+import warnings
 from dataclasses import replace
 
 import numpy as np
 import scipy
 
 from .data_messages import (
-    EarthAcceleration,
     EulerAngles,
     FloatMessage,
     Quaternion,
@@ -24,13 +24,15 @@ def set_heading(devices: list[Device], heading: float, timestamp: float | None =
         if (last_timestamp is not None) and (timestamp > last_timestamp):
             raise ValueError(f"Timestamp is after last timestamp: {timestamp} > {last_timestamp}")
 
+    if any(len(d.earth_acceleration.timestamp) > 0 for d in devices):
+        warnings.warn("Heading not set for earth acceleration")
+
     return [
         replace(
             d,
             quaternion=_set_heading_message(d.quaternion, heading, timestamp),
             rotation_matrix=_set_heading_message(d.rotation_matrix, heading, timestamp),
             euler_angles=_set_heading_message(d.euler_angles, heading, timestamp),
-            earth_acceleration=_set_heading_message(d.earth_acceleration, heading, timestamp),
         )
         for d in devices
     ]
@@ -72,8 +74,6 @@ def _set_heading_message(message: FloatMessage, heading: float, timestamp: float
                 _set_heading_rotations(rotations, heading, index).as_matrix().reshape(-1, 9),
             )
         )
-    elif isinstance(message, EarthAcceleration):
-        raise NotImplementedError("Set heading of earth acceleration")  # TODO
 
     return replace(message, _csv=csv)
 
