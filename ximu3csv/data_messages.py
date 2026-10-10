@@ -7,7 +7,7 @@ from typing import ClassVar, Self
 import numpy as np
 
 
-class DataMessageType(Flag):
+class DataMessageFlag(Flag):
     INERTIAL = auto()
     MAGNETOMETER = auto()
     HIGH_G_ACCELEROMETER = auto()

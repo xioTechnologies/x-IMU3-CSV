@@ -10,7 +10,7 @@ from .data_messages import (
     Battery,
     Button,
     DataMessage,
-    DataMessageType,
+    DataMessageFlag,
     EarthAcceleration,
     Error,
     EulerAngles,
@@ -31,7 +31,7 @@ from .logged_data import LoggedData
 from .metadata import read_metadata
 
 
-def read(path: Path | str, data_message_type: DataMessageType = DataMessageType.ALL) -> LoggedData:
+def read(path: Path | str, data_messages: DataMessageFlag = DataMessageFlag.ALL) -> LoggedData:
     path = Path(path).absolute()
 
     if not path.exists():
@@ -48,7 +48,7 @@ def read(path: Path | str, data_message_type: DataMessageType = DataMessageType.
             metadata.time,
             tuple(
                 replace(
-                    _read_connection(path / c.directory, data_message_type),
+                    _read_connection(path / c.directory, data_messages),
                     model=c.model,
                     serial_number=c.serial_number,
                     device_name=c.device_name,
@@ -63,7 +63,7 @@ def read(path: Path | str, data_message_type: DataMessageType = DataMessageType.
     if not connection_directories:
         raise FileNotFoundError(f"No connection directories found: {path}")
 
-    connections = tuple(_read_connection(d, data_message_type) for d in connection_directories)
+    connections = tuple(_read_connection(d, data_messages) for d in connection_directories)
 
     ping_responses = tuple(_get_ping_response(c.command) for c in connections)
 
@@ -84,7 +84,7 @@ def read(path: Path | str, data_message_type: DataMessageType = DataMessageType.
     )
 
 
-def _read_connection(directory: Path, data_message_type: DataMessageType) -> Connection:
+def _read_connection(directory: Path, data_messages: DataMessageFlag) -> Connection:
     if not directory.is_dir():
         raise FileNotFoundError(f"Directory not found: {directory}")
 
@@ -94,24 +94,24 @@ def _read_connection(directory: Path, data_message_type: DataMessageType) -> Con
         None,
         None,
         _read_command(directory),
-        _read_data_message(directory, Inertial, DataMessageType.INERTIAL, data_message_type),
-        _read_data_message(directory, Magnetometer, DataMessageType.MAGNETOMETER, data_message_type),
-        _read_data_message(directory, HighGAccelerometer, DataMessageType.HIGH_G_ACCELEROMETER, data_message_type),
-        _read_data_message(directory, Quaternion, DataMessageType.QUATERNION, data_message_type),
-        _read_data_message(directory, RotationMatrix, DataMessageType.ROTATION_MATRIX, data_message_type),
-        _read_data_message(directory, EulerAngles, DataMessageType.EULER_ANGLES, data_message_type),
-        _read_data_message(directory, LinearAcceleration, DataMessageType.LINEAR_ACCELERATION, data_message_type),
-        _read_data_message(directory, EarthAcceleration, DataMessageType.EARTH_ACCELERATION, data_message_type),
-        _read_data_message(directory, AhrsStatus, DataMessageType.AHRS_STATUS, data_message_type),
-        _read_data_message(directory, SerialAccessory, DataMessageType.SERIAL_ACCESSORY, data_message_type),
-        _read_data_message(directory, Sync, DataMessageType.SYNC, data_message_type),
-        _read_data_message(directory, Ltc, DataMessageType.LTC, data_message_type),
-        _read_data_message(directory, Temperature, DataMessageType.TEMPERATURE, data_message_type),
-        _read_data_message(directory, Battery, DataMessageType.BATTERY, data_message_type),
-        _read_data_message(directory, Rssi, DataMessageType.RSSI, data_message_type),
-        _read_data_message(directory, Button, DataMessageType.BUTTON, data_message_type),
-        _read_data_message(directory, Notification, DataMessageType.NOTIFICATION, data_message_type),
-        _read_data_message(directory, Error, DataMessageType.ERROR, data_message_type),
+        _read_data_message(directory, Inertial, DataMessageFlag.INERTIAL, data_messages),
+        _read_data_message(directory, Magnetometer, DataMessageFlag.MAGNETOMETER, data_messages),
+        _read_data_message(directory, HighGAccelerometer, DataMessageFlag.HIGH_G_ACCELEROMETER, data_messages),
+        _read_data_message(directory, Quaternion, DataMessageFlag.QUATERNION, data_messages),
+        _read_data_message(directory, RotationMatrix, DataMessageFlag.ROTATION_MATRIX, data_messages),
+        _read_data_message(directory, EulerAngles, DataMessageFlag.EULER_ANGLES, data_messages),
+        _read_data_message(directory, LinearAcceleration, DataMessageFlag.LINEAR_ACCELERATION, data_messages),
+        _read_data_message(directory, EarthAcceleration, DataMessageFlag.EARTH_ACCELERATION, data_messages),
+        _read_data_message(directory, AhrsStatus, DataMessageFlag.AHRS_STATUS, data_messages),
+        _read_data_message(directory, SerialAccessory, DataMessageFlag.SERIAL_ACCESSORY, data_messages),
+        _read_data_message(directory, Sync, DataMessageFlag.SYNC, data_messages),
+        _read_data_message(directory, Ltc, DataMessageFlag.LTC, data_messages),
+        _read_data_message(directory, Temperature, DataMessageFlag.TEMPERATURE, data_messages),
+        _read_data_message(directory, Battery, DataMessageFlag.BATTERY, data_messages),
+        _read_data_message(directory, Rssi, DataMessageFlag.RSSI, data_messages),
+        _read_data_message(directory, Button, DataMessageFlag.BUTTON, data_messages),
+        _read_data_message(directory, Notification, DataMessageFlag.NOTIFICATION, data_messages),
+        _read_data_message(directory, Error, DataMessageFlag.ERROR, data_messages),
     )
 
 
@@ -129,8 +129,8 @@ def _read_command(directory: Path) -> list[dict[str, Any]]:
         raise
 
 
-def _read_data_message(directory: Path, data_message: type[DataMessage], flag: DataMessageType, data_message_type: DataMessageType) -> DataMessage:
-    if flag not in data_message_type:
+def _read_data_message(directory: Path, data_message: type[DataMessage], flag: DataMessageFlag, data_messages: DataMessageFlag) -> DataMessage:
+    if flag not in data_messages:
         return data_message._empty()
 
     return data_message._read(directory)
