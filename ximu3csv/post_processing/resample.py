@@ -53,7 +53,7 @@ def resample(connections: Sequence[Connection], sample_rate: float) -> tuple[Con
 
 
 def _resample(message: FloatMessage, timestamp: np.ndarray) -> FloatMessage:
-    if len(message.timestamp) == 0:
+    if message.is_empty:
         return message
 
     if isinstance(message, Quaternion):

@@ -39,6 +39,10 @@ class DataMessage(ABC):
     def timestamp(self) -> np.ndarray:
         pass
 
+    @property
+    def is_empty(self) -> bool:
+        return len(self.timestamp) == 0
+
     @classmethod
     @abstractmethod
     def _read(cls, connection_path: Path) -> Self:

@@ -5,7 +5,7 @@ from functools import cached_property
 from typing import Self, overload
 
 from .connection import Connection, max_last_timestamp, min_first_timestamp
-from .post_processing import convert_to_euler_angles, crop, offset_timestamps, resample, set_heading
+from .post_processing import calculate_euler_angles, crop, offset_timestamps, resample, set_heading
 
 
 @dataclass(frozen=True)
@@ -65,8 +65,8 @@ class LoggedData:
     def zero_heading(self, timestamp: float | None = None) -> Self:
         return replace(self, _connections=set_heading.zero_heading(self._connections, timestamp))
 
-    def convert_to_euler_angles(self) -> Self:
-        return replace(self, _connections=convert_to_euler_angles.convert_to_euler_angles(self._connections))
+    def calculate_euler_angles(self) -> Self:
+        return replace(self, _connections=calculate_euler_angles.calculate_euler_angles(self._connections))
 
     def _find(self, key: str) -> Connection:
         for attribute in ("config", "serial_number", "device_name", "model"):

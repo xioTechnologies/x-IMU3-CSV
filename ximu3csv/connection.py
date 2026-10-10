@@ -59,13 +59,13 @@ class Connection:
 
     @cached_property
     def first_timestamp(self) -> float | None:
-        timestamps = [m.timestamp[0] for m in self._data_messages() if len(m.timestamp) > 0]
+        timestamps = [m.timestamp[0] for m in self._data_messages() if not m.is_empty]
 
         return min(timestamps) if timestamps else None
 
     @cached_property
     def last_timestamp(self) -> float | None:
-        timestamps = [m.timestamp[-1] for m in self._data_messages() if len(m.timestamp) > 0]
+        timestamps = [m.timestamp[-1] for m in self._data_messages() if not m.is_empty]
 
         return max(timestamps) if timestamps else None
 

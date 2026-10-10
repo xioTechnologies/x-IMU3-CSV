@@ -20,7 +20,7 @@ def set_heading(connections: Sequence[Connection], heading: float, timestamp: fl
     if (timestamp is not None) and (last_timestamp is not None) and (timestamp > last_timestamp):
         raise ValueError(f"Timestamp is after last timestamp: {timestamp} > {last_timestamp}")
 
-    if any(len(c.earth_acceleration.timestamp) > 0 for c in connections):
+    if any(not c.earth_acceleration.is_empty for c in connections):
         warnings.warn("Heading not set for earth acceleration")
 
     return tuple(
@@ -35,7 +35,7 @@ def set_heading(connections: Sequence[Connection], heading: float, timestamp: fl
 
 
 def _set_heading_message(message: FloatMessage, heading: float, timestamp: float | None) -> FloatMessage:
-    if len(message.timestamp) == 0:
+    if message.is_empty:
         return message
 
     if (timestamp is not None) and (timestamp > message.timestamp[-1]):
