@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Flag, auto
+from functools import cached_property
 from pathlib import Path
 from typing import ClassVar, Self
 
@@ -39,6 +40,17 @@ class DataMessage(ABC):
     @abstractmethod
     def timestamp(self) -> np.ndarray:
         pass
+
+    @cached_property
+    def seconds(self) -> np.ndarray:
+        return self.timestamp / 1e6
+
+    @cached_property
+    def sample_rate(self) -> float:
+        if len(self.timestamp) < 2:
+            raise ValueError(f"Too few samples: {len(self.timestamp)}")
+
+        return float(1e6 / np.median(np.diff(self.timestamp)))
 
     @property
     def is_empty(self) -> bool:
