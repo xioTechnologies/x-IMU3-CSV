@@ -58,7 +58,7 @@ class Connection:
     error: Error
 
     def __str__(self) -> str:
-        return f"{self.model!r}, {self.serial_number!r}, {self.device_name!r}, {self.config!r}"
+        return f"{self.device_name} ({self.model} {self.serial_number}, {self.config})"
 
     @cached_property
     def first_timestamp(self) -> float | None:
