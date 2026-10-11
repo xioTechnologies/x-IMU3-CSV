@@ -23,7 +23,7 @@ def resample(connections: Sequence[Connection], sample_rate: float) -> tuple[Con
     last_timestamp = min(last_timestamps)
 
     if first_timestamp >= last_timestamp:
-        raise ValueError(f"No overlapping timestamps: {first_timestamp} >= {last_timestamp}")
+        raise ValueError(f"No overlapping timestamps: {first_timestamp} >= {last_timestamp}")  # TODO: A connection with only events (e.g. a sync-only device) collapses or shrinks the window
 
     if any(not c.ahrs_status.is_empty for c in connections):
         warnings.warn("AHRS status not resampled")

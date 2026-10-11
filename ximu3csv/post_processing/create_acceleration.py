@@ -43,7 +43,7 @@ def _create_earth_acceleration(connection: Connection, z_up: bool) -> EarthAccel
 
 def _get_accelerometer_and_rotation(connection: Connection) -> tuple[np.ndarray, np.ndarray, scipy.spatial.transform.Rotation]:
     if connection.inertial.is_empty:
-        raise ValueError(f"No inertial: {connection}")
+        raise ValueError(f"No inertial: {connection}")  # TODO: Pass through instead of raise so that one connection without data does not fail all connections
 
     if not connection.quaternion.is_empty:
         orientation = connection.quaternion
@@ -52,7 +52,7 @@ def _get_accelerometer_and_rotation(connection: Connection) -> tuple[np.ndarray,
     elif not connection.euler_angles.is_empty:
         orientation = connection.euler_angles
     else:
-        raise ValueError(f"No orientation: {connection}")
+        raise ValueError(f"No orientation: {connection}")  # TODO: Pass through instead of raise so that one connection without data does not fail all connections
 
     mask = (connection.inertial.timestamp >= orientation.timestamp[0]) & (connection.inertial.timestamp <= orientation.timestamp[-1])
 

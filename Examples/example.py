@@ -1,13 +1,21 @@
 import ximu3csv
 
-connection = ximu3csv.read("Logged Data")[0]
+data = ximu3csv.read("Logged Data")
 
-print(type(connection.command))
+print(type(data.name))
+print(type(data.time))
 
-print(type(connection.interface))
+print(type(data.first_timestamp))
+print(type(data.last_timestamp))
+
+connection = data[0]
+
+print(type(connection.model))
 print(type(connection.serial_number))
 print(type(connection.device_name))
-print(type(connection.time))
+print(type(connection.config))
+
+print(type(connection.command))
 
 print(type(connection.inertial.timestamp))
 print(type(connection.inertial.gyroscope_xyz))
