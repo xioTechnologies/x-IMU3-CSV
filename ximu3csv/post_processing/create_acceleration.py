@@ -26,22 +26,22 @@ def create_earth_acceleration(connections: Sequence[Connection], z_up: bool) -> 
 
 
 def _create_linear_acceleration(connection: Connection, z_up: bool) -> LinearAcceleration:
-    timestamp, accelerometer, rotations = _get_accelerometer_and_rotations(connection)
+    timestamp, accelerometer, rotation = _get_accelerometer_and_rotation(connection)
 
     gravity = [0, 0, 1] if z_up else [0, 0, -1]
 
-    return LinearAcceleration(np.column_stack((timestamp, accelerometer - rotations.inv().apply(gravity))))
+    return LinearAcceleration(np.column_stack((timestamp, accelerometer - rotation.inv().apply(gravity))))
 
 
 def _create_earth_acceleration(connection: Connection, z_up: bool) -> EarthAcceleration:
-    timestamp, accelerometer, rotations = _get_accelerometer_and_rotations(connection)
+    timestamp, accelerometer, rotation = _get_accelerometer_and_rotation(connection)
 
     gravity = [0, 0, 1] if z_up else [0, 0, -1]
 
-    return EarthAcceleration(np.column_stack((timestamp, rotations.apply(accelerometer) - gravity)))
+    return EarthAcceleration(np.column_stack((timestamp, rotation.apply(accelerometer) - gravity)))
 
 
-def _get_accelerometer_and_rotations(connection: Connection) -> tuple[np.ndarray, np.ndarray, scipy.spatial.transform.Rotation]:
+def _get_accelerometer_and_rotation(connection: Connection) -> tuple[np.ndarray, np.ndarray, scipy.spatial.transform.Rotation]:
     if connection.inertial.is_empty:
         raise ValueError(f"No inertial: {connection}")
 
@@ -58,6 +58,6 @@ def _get_accelerometer_and_rotations(connection: Connection) -> tuple[np.ndarray
 
     timestamp = connection.inertial.timestamp[mask]
 
-    rotations = scipy.spatial.transform.Slerp(orientation.timestamp, orientation._to_rotations())(timestamp)
+    rotation = scipy.spatial.transform.Slerp(orientation.timestamp, orientation._to_rotation())(timestamp)
 
-    return timestamp, connection.inertial.accelerometer_xyz[mask], rotations
+    return timestamp, connection.inertial.accelerometer_xyz[mask], rotation

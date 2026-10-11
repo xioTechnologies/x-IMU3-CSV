@@ -16,8 +16,8 @@ def create_rotation_matrix(connections: Sequence[Connection]) -> tuple[Connectio
 
 def _create_rotation_matrix(connection: Connection) -> RotationMatrix:
     if not connection.quaternion.is_empty:
-        return RotationMatrix._from_rotations(connection.quaternion.timestamp, connection.quaternion._to_rotations())
+        return RotationMatrix._from_rotation(connection.quaternion.timestamp, connection.quaternion._to_rotation())
     elif not connection.euler_angles.is_empty:
-        return RotationMatrix._from_rotations(connection.euler_angles.timestamp, connection.euler_angles._to_rotations())
+        return RotationMatrix._from_rotation(connection.euler_angles.timestamp, connection.euler_angles._to_rotation())
     else:
         return connection.rotation_matrix

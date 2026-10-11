@@ -38,15 +38,15 @@ def _set_heading_message(message: OrientationMessage, heading: float, timestamp:
 
     index = 0 if timestamp is None else np.argmax(message.timestamp >= timestamp)
 
-    return message._from_rotations(message.timestamp, _set_heading_rotations(message._to_rotations(), heading, index))
+    return message._from_rotation(message.timestamp, _set_heading_rotation(message._to_rotation(), heading, index))
 
 
-def _set_heading_rotations(rotations: scipy.spatial.transform.Rotation, heading: float, index: int) -> scipy.spatial.transform.Rotation:
-    angle = heading - rotations[index].as_euler("ZYX", degrees=True)[0]
+def _set_heading_rotation(rotation: scipy.spatial.transform.Rotation, heading: float, index: int) -> scipy.spatial.transform.Rotation:
+    angle = heading - rotation[index].as_euler("ZYX", degrees=True)[0]
 
-    rotations[index:] = scipy.spatial.transform.Rotation.from_euler("Z", angle, degrees=True) * rotations[index:]
+    rotation[index:] = scipy.spatial.transform.Rotation.from_euler("Z", angle, degrees=True) * rotation[index:]
 
-    return rotations
+    return rotation
 
 
 def zero_heading(connections: Sequence[Connection], timestamp: float | None) -> tuple[Connection, ...]:

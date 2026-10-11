@@ -116,12 +116,12 @@ class CharArrayMessage(DataMessage):
 @dataclass(frozen=True)
 class OrientationMessage(FloatMessage):
     @abstractmethod
-    def _to_rotations(self) -> scipy.spatial.transform.Rotation:
+    def _to_rotation(self) -> scipy.spatial.transform.Rotation:
         pass
 
     @classmethod
     @abstractmethod
-    def _from_rotations(cls, timestamp: np.ndarray, rotations: scipy.spatial.transform.Rotation) -> Self:
+    def _from_rotation(cls, timestamp: np.ndarray, rotation: scipy.spatial.transform.Rotation) -> Self:
         pass
 
 
@@ -240,12 +240,12 @@ class Quaternion(OrientationMessage):
     def z(self) -> np.ndarray:
         return self._csv[:, 4]
 
-    def _to_rotations(self) -> scipy.spatial.transform.Rotation:
+    def _to_rotation(self) -> scipy.spatial.transform.Rotation:
         return scipy.spatial.transform.Rotation.from_quat(self.wxyz[:, [1, 2, 3, 0]])
 
     @classmethod
-    def _from_rotations(cls, timestamp: np.ndarray, rotations: scipy.spatial.transform.Rotation) -> Self:
-        return cls(np.column_stack((timestamp, rotations.as_quat()[:, [3, 0, 1, 2]])))
+    def _from_rotation(cls, timestamp: np.ndarray, rotation: scipy.spatial.transform.Rotation) -> Self:
+        return cls(np.column_stack((timestamp, rotation.as_quat()[:, [3, 0, 1, 2]])))
 
     @classmethod
     def _empty(cls) -> Self:
@@ -296,12 +296,12 @@ class RotationMatrix(OrientationMessage):
     def zz(self) -> np.ndarray:
         return self._csv[:, 9]
 
-    def _to_rotations(self) -> scipy.spatial.transform.Rotation:
+    def _to_rotation(self) -> scipy.spatial.transform.Rotation:
         return scipy.spatial.transform.Rotation.from_matrix(self.xx_to_zz.reshape(-1, 3, 3))
 
     @classmethod
-    def _from_rotations(cls, timestamp: np.ndarray, rotations: scipy.spatial.transform.Rotation) -> Self:
-        return cls(np.column_stack((timestamp, rotations.as_matrix().reshape(-1, 9))))
+    def _from_rotation(cls, timestamp: np.ndarray, rotation: scipy.spatial.transform.Rotation) -> Self:
+        return cls(np.column_stack((timestamp, rotation.as_matrix().reshape(-1, 9))))
 
     @classmethod
     def _empty(cls) -> Self:
@@ -328,12 +328,12 @@ class EulerAngles(OrientationMessage):
     def yaw(self) -> np.ndarray:
         return self._csv[:, 3]
 
-    def _to_rotations(self) -> scipy.spatial.transform.Rotation:
+    def _to_rotation(self) -> scipy.spatial.transform.Rotation:
         return scipy.spatial.transform.Rotation.from_euler("ZYX", self.roll_pitch_yaw[:, [2, 1, 0]], degrees=True)
 
     @classmethod
-    def _from_rotations(cls, timestamp: np.ndarray, rotations: scipy.spatial.transform.Rotation) -> Self:
-        return cls(np.column_stack((timestamp, rotations.as_euler("ZYX", degrees=True)[:, [2, 1, 0]])))
+    def _from_rotation(cls, timestamp: np.ndarray, rotation: scipy.spatial.transform.Rotation) -> Self:
+        return cls(np.column_stack((timestamp, rotation.as_euler("ZYX", degrees=True)[:, [2, 1, 0]])))
 
     @classmethod
     def _empty(cls) -> Self:
