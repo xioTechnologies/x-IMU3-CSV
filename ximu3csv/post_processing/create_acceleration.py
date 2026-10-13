@@ -26,24 +26,30 @@ def create_earth_acceleration(connections: Sequence[Connection], z_up: bool) -> 
 
 
 def _create_linear_acceleration(connection: Connection, z_up: bool) -> LinearAcceleration:
-    timestamp, accelerometer, rotation = _get_accelerometer_and_rotation(connection)
+    timestamp_accelerometer_rotation_gravity = _get_timestamp_accelerometer_rotation_gravity(connection, z_up)
 
-    gravity = [0, 0, 1] if z_up else [0, 0, -1]
+    if timestamp_accelerometer_rotation_gravity is None:
+        return connection.linear_acceleration
+
+    timestamp, accelerometer, rotation, gravity = timestamp_accelerometer_rotation_gravity
 
     return LinearAcceleration(np.column_stack((timestamp, accelerometer - rotation.inv().apply(gravity))))
 
 
 def _create_earth_acceleration(connection: Connection, z_up: bool) -> EarthAcceleration:
-    timestamp, accelerometer, rotation = _get_accelerometer_and_rotation(connection)
+    timestamp_accelerometer_rotation_gravity = _get_timestamp_accelerometer_rotation_gravity(connection, z_up)
 
-    gravity = [0, 0, 1] if z_up else [0, 0, -1]
+    if timestamp_accelerometer_rotation_gravity is None:
+        return connection.earth_acceleration
+
+    timestamp, accelerometer, rotation, gravity = timestamp_accelerometer_rotation_gravity
 
     return EarthAcceleration(np.column_stack((timestamp, rotation.apply(accelerometer) - gravity)))
 
 
-def _get_accelerometer_and_rotation(connection: Connection) -> tuple[np.ndarray, np.ndarray, scipy.spatial.transform.Rotation]:
+def _get_timestamp_accelerometer_rotation_gravity(connection: Connection, z_up: bool) -> tuple[np.ndarray, np.ndarray, scipy.spatial.transform.Rotation, list[int]] | None:
     if connection.inertial.is_empty:
-        raise ValueError(f"No inertial: {connection}")  # TODO: Pass through instead of raise so that one connection without data does not fail all connections
+        return None
 
     if not connection.quaternion.is_empty:
         orientation = connection.quaternion
@@ -52,12 +58,16 @@ def _get_accelerometer_and_rotation(connection: Connection) -> tuple[np.ndarray,
     elif not connection.euler_angles.is_empty:
         orientation = connection.euler_angles
     else:
-        raise ValueError(f"No orientation: {connection}")  # TODO: Pass through instead of raise so that one connection without data does not fail all connections
+        return None
 
     mask = (connection.inertial.timestamp >= orientation.timestamp[0]) & (connection.inertial.timestamp <= orientation.timestamp[-1])
 
     timestamp = connection.inertial.timestamp[mask]
 
+    accelerometer = connection.inertial.accelerometer_xyz[mask]
+
     rotation = scipy.spatial.transform.Slerp(orientation.timestamp, orientation._to_rotation())(timestamp)
 
-    return timestamp, connection.inertial.accelerometer_xyz[mask], rotation
+    gravity = [0, 0, 1] if z_up else [0, 0, -1]
+
+    return timestamp, accelerometer, rotation, gravity
