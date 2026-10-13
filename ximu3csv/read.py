@@ -129,11 +129,11 @@ def _read_command(directory: Path) -> list[dict[str, Any]]:
         raise
 
 
-def _read_data_message(directory: Path, data_message: type[DataMessage], flag: DataMessageFlag, data_messages: DataMessageFlag) -> DataMessage:
+def _read_data_message(directory: Path, data_message_type: type[DataMessage], flag: DataMessageFlag, data_messages: DataMessageFlag) -> DataMessage:
     if flag not in data_messages:
-        return data_message._empty()
+        return data_message_type._empty()
 
-    return data_message._read(directory)
+    return data_message_type._read(directory)
 
 
 def _get_ping_response(command: list[dict[str, Any]]) -> tuple[str | None, str | None, str | None]:
