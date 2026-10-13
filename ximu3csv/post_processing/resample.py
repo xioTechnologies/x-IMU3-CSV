@@ -19,6 +19,9 @@ def resample(connections: Sequence[Connection], sample_rate: float) -> tuple[Con
     if (first_timestamp is None) or (last_timestamp is None):
         raise ValueError("No timestamps")
 
+    if first_timestamp == last_timestamp:
+        raise ValueError("Too few timestamps")
+
     if any(not c.ahrs_status.is_empty for c in connections):
         warnings.warn("AHRS status not resampled")
 
