@@ -5,7 +5,7 @@ from dataclasses import replace
 import numpy as np
 import scipy
 
-from ..connection import Connection
+from ..connection import Connection, max_last_timestamp, min_first_timestamp
 from ..data_messages import Battery, FloatMessage, OrientationMessage
 
 
@@ -13,17 +13,11 @@ def resample(connections: Sequence[Connection], sample_rate: float) -> tuple[Con
     if sample_rate <= 0:
         raise ValueError(f"Invalid sample rate: {sample_rate}")
 
-    if all(c.first_timestamp is None for c in connections):
+    first_timestamp = min_first_timestamp(connections)
+    last_timestamp = max_last_timestamp(connections)
+
+    if (first_timestamp is None) or (last_timestamp is None):
         raise ValueError("No timestamps")
-
-    first_timestamps = [c.first_timestamp for c in connections if c.first_timestamp is not None]
-    last_timestamps = [c.last_timestamp for c in connections if c.last_timestamp is not None]
-
-    first_timestamp = max(first_timestamps)
-    last_timestamp = min(last_timestamps)
-
-    if first_timestamp >= last_timestamp:
-        raise ValueError(f"No overlapping timestamps: {first_timestamp} >= {last_timestamp}")  # TODO: A connection with only events (e.g. a sync-only device) collapses or shrinks the window
 
     if any(not c.ahrs_status.is_empty for c in connections):
         warnings.warn("AHRS status not resampled")
