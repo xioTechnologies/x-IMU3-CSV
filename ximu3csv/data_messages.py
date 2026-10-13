@@ -45,13 +45,6 @@ class DataMessage(ABC):
     def seconds(self) -> np.ndarray:
         return self.timestamp / 1e6
 
-    @cached_property
-    def sample_rate(self) -> float:
-        if len(self.timestamp) < 2:
-            raise ValueError(f"Too few samples: {len(self.timestamp)}")
-
-        return float(1e6 / np.median(np.diff(self.timestamp)))
-
     @property
     def is_empty(self) -> bool:
         return len(self.timestamp) == 0
@@ -126,7 +119,37 @@ class CharArrayMessage(DataMessage):
 
 
 @dataclass(frozen=True)
-class OrientationMessage(FloatMessage):
+class ContinuousMessage(FloatMessage):
+    @cached_property
+    def sample_rate(self) -> float:
+        if len(self.timestamp) < 2:
+            raise ValueError(f"Too few samples: {len(self.timestamp)}")
+
+        return float(1e6 / np.median(np.diff(self.timestamp)))
+
+
+@dataclass(frozen=True)
+class DiscreteMessage(FloatMessage):
+    pass
+
+
+@dataclass(frozen=True)
+class BooleanMessage(DiscreteMessage):
+    @property
+    def _value(self) -> np.ndarray:
+        return self._csv[:, 1] != 0
+
+    @cached_property
+    def rising_edge(self) -> np.ndarray:
+        return self.timestamp[self._value != 0]
+
+    @cached_property
+    def falling_edge(self) -> np.ndarray:
+        return self.timestamp[self._value == 0]
+
+
+@dataclass(frozen=True)
+class OrientationMessage(ContinuousMessage):
     @abstractmethod
     def _to_rotation(self) -> scipy.spatial.transform.Rotation:
         pass
@@ -138,7 +161,7 @@ class OrientationMessage(FloatMessage):
 
 
 @dataclass(frozen=True)
-class Inertial(FloatMessage):
+class Inertial(ContinuousMessage):
     _file_name = "Inertial.csv"
 
     @property
@@ -179,7 +202,7 @@ class Inertial(FloatMessage):
 
 
 @dataclass(frozen=True)
-class Magnetometer(FloatMessage):
+class Magnetometer(ContinuousMessage):
     _file_name = "Magnetometer.csv"
 
     @property
@@ -204,7 +227,7 @@ class Magnetometer(FloatMessage):
 
 
 @dataclass(frozen=True)
-class HighGAccelerometer(FloatMessage):
+class HighGAccelerometer(ContinuousMessage):
     _file_name = "HighGAccelerometer.csv"
 
     @property
@@ -353,7 +376,7 @@ class EulerAngles(OrientationMessage):
 
 
 @dataclass(frozen=True)
-class LinearAcceleration(FloatMessage):
+class LinearAcceleration(ContinuousMessage):
     _file_name = "LinearAcceleration.csv"
 
     @property
@@ -378,7 +401,7 @@ class LinearAcceleration(FloatMessage):
 
 
 @dataclass(frozen=True)
-class EarthAcceleration(FloatMessage):
+class EarthAcceleration(ContinuousMessage):
     _file_name = "EarthAcceleration.csv"
 
     @property
@@ -413,7 +436,7 @@ class SerialAccessory(CharArrayMessage):
 
 
 @dataclass(frozen=True)
-class Sync(FloatMessage):
+class Sync(BooleanMessage):
     _file_name = "Sync.csv"
 
     @property
@@ -431,7 +454,7 @@ class Ltc(CharArrayMessage):
 
 
 @dataclass(frozen=True)
-class Temperature(FloatMessage):
+class Temperature(ContinuousMessage):
     _file_name = "Temperature.csv"
 
     @property
@@ -444,7 +467,7 @@ class Temperature(FloatMessage):
 
 
 @dataclass(frozen=True)
-class Battery(FloatMessage):
+class Battery(ContinuousMessage):
     _file_name = "Battery.csv"
 
     @property
@@ -465,7 +488,7 @@ class Battery(FloatMessage):
 
 
 @dataclass(frozen=True)
-class Rssi(FloatMessage):
+class Rssi(ContinuousMessage):
     _file_name = "Rssi.csv"
 
     @property
@@ -482,7 +505,7 @@ class Rssi(FloatMessage):
 
 
 @dataclass(frozen=True)
-class Button(FloatMessage):
+class Button(BooleanMessage):
     _file_name = "Button.csv"
 
     @property

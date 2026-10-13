@@ -6,7 +6,7 @@ import numpy as np
 import scipy
 
 from ..connection import Connection, max_last_timestamp, min_first_timestamp
-from ..data_messages import Battery, FloatMessage, OrientationMessage
+from ..data_messages import Battery, ContinuousMessage, OrientationMessage
 
 
 def resample(connections: Sequence[Connection], sample_rate: float) -> tuple[Connection, ...]:
@@ -67,7 +67,7 @@ def resample(connections: Sequence[Connection], sample_rate: float) -> tuple[Con
     )
 
 
-def _resample(message: FloatMessage, timestamp: np.ndarray) -> FloatMessage:
+def _resample(message: ContinuousMessage, timestamp: np.ndarray) -> ContinuousMessage:
     if message.is_empty:
         return message
 
