@@ -10,10 +10,10 @@ from .post_processing import (
     create_euler_angles,
     create_quaternion,
     create_rotation_matrix,
-    crop,
     offset_timestamps,
     resample,
     set_heading,
+    truncate,
 )
 
 
@@ -56,8 +56,8 @@ class LoggedData:
     def last_timestamp(self) -> float | None:
         return max_last_timestamp(self._connections)
 
-    def crop(self, start: float | None = None, stop: float | None = None) -> Self:
-        return replace(self, _connections=crop.crop(self._connections, start, stop))
+    def truncate(self, before: float | None = None, after: float | None = None) -> Self:
+        return replace(self, _connections=truncate.truncate(self._connections, before, after))
 
     def offset_timestamps(self, offset: float) -> Self:
         return replace(self, _connections=offset_timestamps.offset_timestamps(self._connections, offset))
