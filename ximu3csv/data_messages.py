@@ -137,7 +137,7 @@ class DiscreteMessage(FloatMessage):
 class BooleanMessage(DiscreteMessage):
     @property
     def _value(self) -> np.ndarray:
-        return self._csv[:, 1] != 0
+        return self._csv[:, 1]
 
     @cached_property
     def rising_edge(self) -> np.ndarray:
