@@ -141,6 +141,9 @@ def _get_ping_response(command: list[dict[str, Any]]) -> tuple[str | None, str |
         if "ping" in response:
             ping = response["ping"]
 
+            if not isinstance(ping, dict):
+                break
+
             return ping.get("model"), ping.get("sn"), ping.get("name")
 
     return None, None, None
@@ -149,6 +152,11 @@ def _get_ping_response(command: list[dict[str, Any]]) -> tuple[str | None, str |
 def _get_time(command: list[dict[str, Any]]) -> datetime | None:
     for response in command:
         if "time" in response:
-            return datetime.strptime(response["time"], "%Y-%m-%d %H:%M:%S")
+            time = response["time"]
+
+            if not isinstance(time, str):
+                break
+
+            return datetime.strptime(time, "%Y-%m-%d %H:%M:%S")
 
     return None
