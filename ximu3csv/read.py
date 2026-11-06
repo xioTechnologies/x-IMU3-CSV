@@ -93,6 +93,7 @@ def _read_connection(directory: Path, data_messages: DataMessageFlag) -> Connect
         None,
         None,
         None,
+        directory.name,
         _read_command(directory),
         _read_data_message(directory, Inertial, DataMessageFlag.INERTIAL, data_messages),
         _read_data_message(directory, Magnetometer, DataMessageFlag.MAGNETOMETER, data_messages),

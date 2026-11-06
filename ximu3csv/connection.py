@@ -33,6 +33,7 @@ class Connection:
     serial_number: str | None
     device_name: str | None
     config: str | None
+    directory: str
 
     # Command.json
     command: list[dict[str, Any]]
